@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:ebon_tracker/data/gmail_message.dart';
+import 'package:ebon_tracker/data/attachment.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:redux/redux.dart';
 import 'package:meta/meta.dart';

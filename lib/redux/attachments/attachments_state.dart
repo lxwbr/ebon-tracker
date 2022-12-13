@@ -1,4 +1,4 @@
-import 'package:ebon_tracker/data/gmail_message.dart';
+import 'package:ebon_tracker/data/attachment.dart';
 import 'package:meta/meta.dart';
 
 @immutable

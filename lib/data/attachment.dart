@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 class Attachment {
   final String id;
@@ -24,6 +25,8 @@ class Attachment {
       content: map['content'] ?? '',
     );
   }
+
+  Uint8List byteArrayContent() => Uint8List.fromList(base64.decode(content));
 
   String toJson() => json.encode(toMap());
 

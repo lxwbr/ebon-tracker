@@ -1,82 +1,63 @@
 // This has back button and drawer
-import 'dart:convert';
-
 import 'package:dartz/dartz.dart';
 import 'package:ebon_tracker/application/ebon_reader.dart';
-import 'package:ebon_tracker/data/gmail_message.dart';
-import 'package:flutter/foundation.dart';
+import 'package:ebon_tracker/data/attachment.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf_render/pdf_render_widgets.dart';
 
 import '../application/database_service.dart';
+import '../application/helpers.dart';
 import '../data/product.dart';
+import '../data/receipt.dart';
+import 'errors.dart';
 
 DatabaseService _databaseService = DatabaseService();
 
 class PdfViewerPage extends StatelessWidget {
-  const PdfViewerPage(
-      {super.key, required this.content, required this.messageId});
-  final Uint8List content;
-  final String messageId;
+  const PdfViewerPage({super.key, required this.attachment});
+  final Attachment attachment;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, [bool mounted = true]) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
               onPressed: () async {
-                List<Product> products =
-                    await _databaseService.expensesByMessageId(messageId);
-                if (products.isEmpty) {
-                  List<Either<String, Product>> scanned =
-                      await readProducts(messageId, content);
-
-                  List<String> errors = scanned
-                      .where((element) => element.isLeft())
-                      .map((e) =>
-                          e.swap().getOrElse(() => throw UnimplementedError()))
-                      .toList();
-                  if (errors.isEmpty) {
-                    List<Product> expenses = scanned
-                        .map((e) =>
-                            e.getOrElse(() => throw UnimplementedError()))
-                        .toList();
-                    await Future.wait(expenses.map((expense) async {
-                      await _databaseService.insertExpense(messageId, expense);
-                    }));
-
-                    Navigator.push(
+                (await insertReceipt(attachment)).fold(
+                    (l) => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ErrorsPage(errors: [l]))),
+                    (r) => Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (_) =>
-                                new ScannedPdfViewerPage(products: products)));
-                  } else {
-                    // TODO: display errors!
-                  }
-                }
+                                ScannedPdfViewerPage(products: r.expenses))));
               },
               icon: const Icon(Icons.scanner))
         ],
       ),
-      drawer: Drawer(),
-      body: PdfViewer.openData(content),
+      drawer: const Drawer(),
+      body: PdfViewer.openData(attachment.byteArrayContent()),
     );
   }
 }
 
-void onPressed(bool? selected, String name, BuildContext context) async {
+void onPressed(bool? selected, String name, BuildContext context,
+    [bool mounted = true]) async {
   if (selected != null && selected) {
     var expenses = await _databaseService.expensesByName(name);
     List<Tuple2<Product, Attachment>> tuple = await Future.wait(expenses.map(
         (e) async => Tuple2<Product, Attachment>(
             e, await _databaseService.attachment(e.messageId))));
 
+    if (!mounted) return;
     Navigator.push(context,
         MaterialPageRoute(builder: (_) => ExpensePage(products: tuple)));
   }
@@ -91,11 +72,11 @@ class ScannedPdfViewerPage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        drawer: Drawer(),
+        drawer: const Drawer(),
         body: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: DataTable(
@@ -129,11 +110,11 @@ class ExpensePage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        drawer: Drawer(),
+        drawer: const Drawer(),
         body: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: DataTable(
@@ -149,9 +130,7 @@ class ExpensePage extends StatelessWidget {
                 rows: sorted
                     .map((e) => DataRow(cells: [
                           DataCell(Text(e.value1.toString())),
-                          DataCell(Text(DateFormat('yy/MM/dd HH:mm').format(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                  e.value2.timestamp * 1000))))
+                          DataCell(Text(timestampString(e.value2.timestamp)))
                         ]))
                     .toList())));
   }

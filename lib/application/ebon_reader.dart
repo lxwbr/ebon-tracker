@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:ebon_tracker/data/receipt.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,7 +11,9 @@ import 'package:dartz/dartz.dart';
 
 import 'package:flutter/foundation.dart';
 
+import '../data/attachment.dart';
 import '../data/product.dart';
+import 'database_service.dart';
 
 String sanitize(String product) {
   if (product.endsWith(" *")) {
@@ -135,8 +138,62 @@ Future<List<String>> read(String messageId, Uint8List pdfContent) async {
   return splitted;
 }
 
-Future<List<Either<String, Product>>> readProducts(
-    String messageId, Uint8List pdfContent) async {
-  List<String> splitted = await read(messageId, pdfContent);
-  return consume(messageId, splitted, List.empty());
+Future<List<Either<String, Product>>> scanAttachment(
+    Attachment attachment) async {
+  List<String> splitted =
+      await read(attachment.id, attachment.byteArrayContent());
+  return consume(attachment.id, splitted, List.empty());
+}
+
+DatabaseService _databaseService = DatabaseService();
+
+extension ListEitherExtension<L, R> on List<Either<L, R>> {
+  List<R> rights() => where((e) => e.isRight())
+      .map((e) => e.getOrElse(() => throw UnimplementedError()))
+      .toList();
+
+  List<L> lefts() => where((e) => e.isLeft())
+      .map((e) => e.swap().getOrElse(() => throw UnimplementedError()))
+      .toList();
+}
+
+Future<Either<FailedReceipt, Receipt>> insertReceipt(
+    Attachment attachment) async {
+  // Check if there expenses for this attachment has been scanned in the past
+  List<Product> existing =
+      await _databaseService.expensesByMessageId(attachment.id);
+
+  if (existing.isEmpty) {
+    List<Either<String, Product>> scanned = await scanAttachment(attachment);
+
+    // Filter errors only
+    List<String> errors = scanned.lefts();
+
+    // If there are no errors scanning the PDF, proceed with inserting expenses to DB
+    if (errors.isEmpty) {
+      // Filter successful reads only
+      List<Product> successful = scanned.rights();
+
+      await _databaseService.insertExpenses(attachment.id, successful);
+
+      return Right(Receipt(
+          id: attachment.id,
+          timestamp: attachment.timestamp,
+          expenses: successful));
+    } else {
+      return Left(FailedReceipt(errors: errors, attachment: attachment));
+    }
+  } else {
+    return Right(Receipt(
+        id: attachment.id,
+        timestamp: attachment.timestamp,
+        expenses: existing));
+  }
+}
+
+Future<List<Either<FailedReceipt, Receipt>>> insertReceipts(
+    List<Attachment> attachments) async {
+  return await Future.wait(attachments.map((attachment) async {
+    return await insertReceipt(attachment);
+  }));
 }

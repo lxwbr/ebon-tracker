@@ -54,15 +54,6 @@ class Product {
   }
 
   Map<String, dynamic> toMap(String messageId) {
-    var unit;
-    switch (unit) {
-      case Units.none:
-        unit = "Unit.none";
-        break;
-      case Units.kg:
-        unit = "Unit.kg";
-        break;
-    }
     return {
       'messageId': messageId,
       'name': name,
@@ -75,17 +66,17 @@ class Product {
   }
 
   factory Product.fromMap(Map<String, dynamic> map) {
-    var unit;
+    late Units u;
     switch (map['unit']) {
-      case "Unit.none":
-        unit = Units.none;
+      case "Units.none":
+        u = Units.none;
         break;
-      case "Unit.kg":
-        unit = Units.kg;
+      case "Units.kg":
+        u = Units.kg;
         break;
       default:
+        throw UnimplementedError();
     }
-
     return Product(
       messageId: map['messageId'] ?? '',
       name: map['name'] ?? '',
@@ -93,7 +84,7 @@ class Product {
       discount: map['discount'] ?? 0.0,
       quantity: map['quantity'] ?? 0.0,
       total: map['total'] ?? 0.0,
-      unit: unit,
+      unit: u,
     );
   }
 }

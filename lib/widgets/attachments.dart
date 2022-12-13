@@ -9,13 +9,13 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 
-import 'package:flutter/services.dart';
-
 import '../application/database_service.dart';
-import '../data/gmail_message.dart';
-import '../data/product.dart';
+import '../application/helpers.dart';
+import '../data/attachment.dart';
+import '../data/receipt.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
+import 'errors.dart';
 import 'pdfviewerpage.dart';
 
 DatabaseService _databaseService = DatabaseService();
@@ -25,7 +25,7 @@ class Attachments extends StatelessWidget {
   final GoogleSignInAccount account;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, [bool mounted = true]) {
     return StoreConnector<AppState, AttachmentsState>(
         distinct: true,
         converter: (store) => store.state.attachmentsState,
@@ -38,28 +38,19 @@ class Attachments extends StatelessWidget {
                   actions: [
                     IconButton(
                         onPressed: () async {
-                          await Future.wait(
-                              state.attachments.map((attachment) async {
-                            List<Product> products = await _databaseService
-                                .expensesByMessageId(attachment.id);
-                            if (products.isEmpty) {
-                              List<Either<String, Product>> prds =
-                                  await readProducts(
-                                      attachment.id,
-                                      Uint8List.fromList(
-                                          base64.decode(attachment.content)));
-                              // TODO: error handling and display
-                              List<Product> filtered = prds
-                                  .where((element) => element.isRight())
-                                  .map((e) => e.getOrElse(
-                                      () => throw UnimplementedError()))
-                                  .toList();
-                              await Future.wait(filtered.map((expense) async {
-                                await _databaseService.insertExpense(
-                                    attachment.id, expense);
-                              }));
-                            }
-                          }));
+                          // TODO: display errors.
+                          List<Either<FailedReceipt, Receipt>> result =
+                              await insertReceipts(state.attachments);
+                          List<FailedReceipt> errors = result.lefts();
+
+                          if (errors.isNotEmpty) {
+                            if (!mounted) return;
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        ErrorsPage(errors: errors)));
+                          }
                         },
                         icon: const Icon(Icons.scanner)),
                     IconButton(
@@ -75,7 +66,7 @@ class Attachments extends StatelessWidget {
                   ],
                   bottom: (() {
                     if (state.loading) {
-                      return PreferredSize(
+                      return const PreferredSize(
                           preferredSize: Size.fromHeight(6.0),
                           child: LinearProgressIndicator(
                             semanticsLabel: 'Linear progress indicator',
@@ -135,27 +126,23 @@ class Attachments extends StatelessWidget {
                         ),
                       ],
                       rows: sorted
-                          .map((e) => DataRow(
+                          .map((attachment) => DataRow(
                                   onSelectChanged: (selected) => {
                                         if (selected != null && selected)
                                           {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (_) => PdfViewerPage(
-                                                        messageId: e.id,
-                                                        content:
-                                                            Uint8List.fromList(
-                                                                base64.decode(e
-                                                                    .content)))))
+                                                    builder: (_) =>
+                                                        PdfViewerPage(
+                                                            attachment:
+                                                                attachment)))
                                           }
                                       },
                                   cells: [
-                                    DataCell(Text(e.id)),
-                                    DataCell(Text(DateFormat('yy/MM/dd HH:mm')
-                                        .format(
-                                            DateTime.fromMillisecondsSinceEpoch(
-                                                e.timestamp * 1000))))
+                                    DataCell(Text(attachment.id)),
+                                    DataCell(Text(
+                                        timestampString(attachment.timestamp)))
                                   ]))
                           .toList())));
         });

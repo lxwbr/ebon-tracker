@@ -1,4 +1,4 @@
-import 'package:ebon_tracker/data/gmail_message.dart';
+import 'package:ebon_tracker/data/attachment.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -65,6 +65,24 @@ class DatabaseService {
       expense.toMap(messageId),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  // Define a function that inserts attachments into the database
+  Future<void> insertExpenses(String messageId, List<Product> expenses) async {
+    // Get a reference to the database.
+    final db = await _databaseService.database;
+
+    String values = expenses
+        .map((e) =>
+            "('${e.messageId}','${e.name}',${e.quantity},${e.pricePerUnit},${e.total},${e.discount},'${e.unit}')")
+        .join(",");
+
+    // Insert the Breed into the correct table. You might also specify the
+    // `conflictAlgorithm` to use in case the same breed is inserted twice.
+    //
+    // In this case, replace any previous data.
+    await db.rawInsert(
+        'INSERT INTO expenses(messageId, name, quantity, price, total, discount, unit) VALUES $values');
   }
 
   Future<List<Product>> expensesByName(String name) async {
