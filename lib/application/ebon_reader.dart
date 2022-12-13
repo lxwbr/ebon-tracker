@@ -41,13 +41,13 @@ Quantity? parseQuantity(String second) {
     if (splitted.first.contains("Stk")) {
       double n = double.parse(splitted.first.split("Stk").first.trim());
       double price = double.parse(splitted.last.trim().replaceAll(",", "."));
-      return Quantity(n: n, price: price, unit: Unit.none);
+      return Quantity(n: n, price: price, unit: Units.none);
     } else if (splitted.first.contains("kg")) {
       double n = double.parse(
           splitted.first.split("kg").first.trim().replaceAll(",", "."));
       double price = double.parse(
           splitted.last.split("EUR/kg").first.trim().replaceAll(",", "."));
-      return Quantity(n: n, price: price, unit: Unit.kg);
+      return Quantity(n: n, price: price, unit: Units.kg);
     }
   }
 }

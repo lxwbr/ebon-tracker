@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dartz/dartz.dart';
 import 'package:ebon_tracker/application/ebon_reader.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
@@ -42,12 +43,18 @@ class Attachments extends StatelessWidget {
                             List<Product> products = await _databaseService
                                 .expensesByMessageId(attachment.id);
                             if (products.isEmpty) {
-                              print("INSERTING ${attachment.timestamp}");
-                              List<Product> prds = await readProducts(
-                                  attachment.id,
-                                  Uint8List.fromList(
-                                      base64.decode(attachment.content)));
-                              await Future.wait(prds.map((expense) async {
+                              List<Either<String, Product>> prds =
+                                  await readProducts(
+                                      attachment.id,
+                                      Uint8List.fromList(
+                                          base64.decode(attachment.content)));
+                              // TODO: error handling and display
+                              List<Product> filtered = prds
+                                  .where((element) => element.isRight())
+                                  .map((e) => e.getOrElse(
+                                      () => throw UnimplementedError()))
+                                  .toList();
+                              await Future.wait(filtered.map((expense) async {
                                 await _databaseService.insertExpense(
                                     attachment.id, expense);
                               }));

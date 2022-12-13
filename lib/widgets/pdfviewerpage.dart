@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf_render/pdf_render_widgets.dart';
-import 'package:tuple/tuple.dart';
 
 import '../application/database_service.dart';
 import '../data/product.dart';
@@ -125,7 +124,7 @@ class ExpensePage extends StatelessWidget {
   Widget build(BuildContext context) {
     List<Tuple2<Product, Attachment>> sorted = products.toList();
 
-    sorted.sort((a, b) => b.item2.timestamp.compareTo(a.item2.timestamp));
+    sorted.sort((a, b) => b.value2.timestamp.compareTo(a.value2.timestamp));
 
     return Scaffold(
         appBar: AppBar(
@@ -149,10 +148,10 @@ class ExpensePage extends StatelessWidget {
                 ],
                 rows: sorted
                     .map((e) => DataRow(cells: [
-                          DataCell(Text(e.item1.toString())),
+                          DataCell(Text(e.value1.toString())),
                           DataCell(Text(DateFormat('yy/MM/dd HH:mm').format(
                               DateTime.fromMillisecondsSinceEpoch(
-                                  e.item2.timestamp * 1000))))
+                                  e.value2.timestamp * 1000))))
                         ]))
                     .toList())));
   }
