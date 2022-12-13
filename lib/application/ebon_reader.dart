@@ -1,15 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:ebon_tracker/data/receipt.dart';
-import 'package:flutter/services.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:pdf_text/pdf_text.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:flutter/foundation.dart';
 
 import '../data/attachment.dart';
 import '../data/product.dart';
