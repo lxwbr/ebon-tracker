@@ -15,6 +15,8 @@ import '../data/attachment.dart';
 import '../data/product.dart';
 import 'database_service.dart';
 
+import 'package:syncfusion_flutter_pdf/pdf.dart';
+
 String sanitize(String product) {
   if (product.endsWith(" *")) {
     return product.substring(0, product.length - 2);
@@ -113,35 +115,29 @@ List<Either<String, Product>> consume(String messageId, List<String> ebonLines,
   }
 }
 
-Future<List<String>> read(String messageId, Uint8List pdfContent) async {
-  File file;
-  try {
-    String tempDirPath = (await getTemporaryDirectory()).path;
+Future<List<String>> read(String messageId, String content) async {
+  PdfDocument document = PdfDocument.fromBase64String(content);
+  //Create a new instance of the PdfTextExtractor.
+  PdfTextExtractor extractor = PdfTextExtractor(document);
 
-    String filePath = join(tempDirPath, "rewe_ebon_$messageId.pdf");
+  //Extract all the text from the document.
+  List<TextLine> textLines = extractor.extractTextLines();
 
-    file = File(filePath);
-    file.createSync(recursive: true);
-    file.writeAsBytesSync(pdfContent);
-  } on Exception catch (e) {
-    return Future.error(e);
-  }
-  PDFDoc doc = await PDFDoc.fromFile(file);
-  String text = await doc.text;
-  file.deleteSync();
+  document.dispose();
 
-  int first = text.indexOf("EUR");
-  int last = text.indexOf("--------------");
-  List<String> splitted =
-      new LineSplitter().convert(text.substring(first + 3, last).trim());
+  int first = textLines.indexWhere((element) => element.text.contains("EUR"));
+  int last = textLines
+      .indexWhere((element) => element.text.contains("--------------"));
 
-  return splitted;
+  List<String> expenses =
+      textLines.sublist(first + 1, last).map((e) => e.text).toList();
+
+  return expenses;
 }
 
 Future<List<Either<String, Product>>> scanAttachment(
     Attachment attachment) async {
-  List<String> splitted =
-      await read(attachment.id, attachment.byteArrayContent());
+  List<String> splitted = await read(attachment.id, attachment.content);
   return consume(attachment.id, splitted, List.empty());
 }
 
