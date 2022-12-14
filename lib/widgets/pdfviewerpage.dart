@@ -1,6 +1,6 @@
 // This has back button and drawer
 import 'package:dartz/dartz.dart';
-import 'package:ebon_tracker/application/ebon_reader.dart';
+import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/data/attachment.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -28,16 +28,24 @@ class PdfViewerPage extends StatelessWidget {
         actions: [
           IconButton(
               onPressed: () async {
-                (await insertReceipt(attachment)).fold(
-                    (l) => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ErrorsPage(errors: [l]))),
-                    (r) => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) =>
-                                ScannedPdfViewerPage(products: r.expenses))));
+                try {
+                  Receipt receipt = await insertReceipt(attachment);
+                  if (!mounted) return;
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ScannedPdfViewerPage(
+                              products: receipt.expenses)));
+                } catch (ex) {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ErrorsPage(errors: [
+                                FailedReceipt(
+                                    attachment: attachment,
+                                    error: ex.toString())
+                              ])));
+                }
               },
               icon: const Icon(Icons.scanner))
         ],

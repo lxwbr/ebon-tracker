@@ -1,56 +1,51 @@
 class Product {
   final String name;
-  final double pricePerUnit;
+  final double price;
   final double quantity;
   final Units unit;
   final double discount;
-  final double total;
   final String messageId;
 
   const Product({
     required this.name,
-    required this.pricePerUnit,
+    // Raw price per unit without any discount.
+    required this.price,
+    // Discount for this product.
     required this.discount,
     required this.quantity,
     required this.unit,
-    required this.total,
     required this.messageId,
   });
 
-  factory Product.from(String messageId, String name, double price,
-      double? discount, Quantity? quantity) {
-    var p;
-    var n = 1.0;
-    var d = .0;
-    var u = Units.none;
-    var t = price;
-    if (quantity != null) {
-      p = quantity.price;
-      n = quantity.n;
-      u = quantity.unit;
-    } else {
-      if (discount != null) {
-        p = price;
-        t = double.parse((price + discount).toStringAsFixed(2));
-        d = discount;
-      } else {
-        p = price;
-      }
-    }
+  double total() =>
+      double.parse((price * quantity + discount).toStringAsFixed(2));
 
-    return Product(
+  factory Product.from(String messageId, String name, double total,
+      double discount, Quantity quantity) {
+    Product product = Product(
         messageId: messageId,
         name: name,
-        pricePerUnit: p,
-        discount: d,
-        quantity: n,
-        unit: u,
-        total: t);
+        price: quantity.price,
+        discount: discount,
+        quantity: quantity.n,
+        unit: quantity.unit);
+
+    if (double.parse((product.total() - product.discount).toStringAsFixed(2)) !=
+        total) {
+      throw AssertionError(
+          "Calculated total ${product.total()}+${product.discount.abs()} was not equal to product total $total");
+    }
+
+    return product;
   }
 
   @override
   String toString() {
-    return "$name: $pricePerUnit x $quantity${discount.abs() > 0 ? " - ${discount.abs()}" : ""} = $total";
+    String q = quantity > 1.0 ? " x $quantity" : "";
+    String d = discount < .0 ? " - ${discount.abs()}" : "";
+    String t = q.isNotEmpty || d.isNotEmpty ? " = ${total()}" : "";
+
+    return "$name: $price$q$d$t";
   }
 
   Map<String, dynamic> toMap(String messageId) {
@@ -58,8 +53,8 @@ class Product {
       'messageId': messageId,
       'name': name,
       'quantity': quantity,
-      'price': pricePerUnit,
-      'total': total,
+      'price': price,
+      'total': total(),
       'discount': discount,
       'unit': unit.toString()
     };
@@ -80,10 +75,9 @@ class Product {
     return Product(
       messageId: map['messageId'] ?? '',
       name: map['name'] ?? '',
-      pricePerUnit: map['price'] ?? 0.0,
+      price: map['price'] ?? 0.0,
       discount: map['discount'] ?? 0.0,
       quantity: map['quantity'] ?? 0.0,
-      total: map['total'] ?? 0.0,
       unit: u,
     );
   }
@@ -97,7 +91,10 @@ enum Units {
 class Quantity {
   final double n;
   final Units unit;
+  // Price per unit
   final double price;
+
+  double total() => double.parse((price * n).toStringAsFixed(2));
 
   const Quantity({required this.n, required this.price, required this.unit});
 }

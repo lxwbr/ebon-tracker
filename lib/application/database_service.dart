@@ -1,3 +1,4 @@
+import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/data/attachment.dart';
 import 'package:ebon_tracker/data/receipt.dart';
 import 'package:path/path.dart';
@@ -48,6 +49,10 @@ class DatabaseService {
     );
 
     await db.execute(
+      'CREATE TABLE discounts(messageId VARCHAR, name VARCHAR, value REAL, FOREIGN KEY(messageId) REFERENCES receipts(id))',
+    );
+
+    await db.execute(
       'CREATE TABLE expenses(messageId VARCHAR, name VARCHAR, price REAL, quantity REAL, unit VARCHAR, discount REAL, total REAL, FOREIGN KEY(messageId) REFERENCES receipts(id))',
     );
   }
@@ -75,7 +80,7 @@ class DatabaseService {
 
     String values = expenses
         .map((e) =>
-            "('${e.messageId}','${e.name}',${e.quantity},${e.pricePerUnit},${e.total},${e.discount},'${e.unit}')")
+            "('${e.messageId}','${e.name}',${e.quantity},${e.price},${e.total()},${e.discount},'${e.unit}')")
         .join(",");
 
     // Insert the Breed into the correct table. You might also specify the
@@ -98,6 +103,29 @@ class DatabaseService {
     final List<Map<String, dynamic>> maps = await db
         .query('expenses', where: 'messageId = ?', whereArgs: [messageId]);
     return maps.map((e) => Product.fromMap(e)).toList();
+  }
+
+  Future<void> insertDiscounts(
+      String messageId, List<Discount> discounts) async {
+    // Get a reference to the database.
+    final db = await _databaseService.database;
+
+    String values =
+        discounts.map((d) => "('$messageId','${d.name}',${d.value})").join(",");
+
+    // Insert the Breed into the correct table. You might also specify the
+    // `conflictAlgorithm` to use in case the same breed is inserted twice.
+    //
+    // In this case, replace any previous data.
+    await db.rawInsert(
+        'INSERT INTO discounts(messageId, name, value) VALUES $values');
+  }
+
+  Future<List<Discount>> discounts(String messageId) async {
+    final db = await _databaseService.database;
+    final List<Map<String, dynamic>> maps = await db
+        .query('discounts', where: 'messageId = ?', whereArgs: [messageId]);
+    return maps.map((e) => Discount.fromMap(e)).toList();
   }
 
   // Define a function that inserts attachments into the database

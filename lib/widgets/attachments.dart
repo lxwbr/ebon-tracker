@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
-import 'package:ebon_tracker/application/ebon_reader.dart';
+import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
 import 'package:flutter/material.dart';

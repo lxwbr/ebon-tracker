@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
+import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/data/product.dart';
 
 class Attachment {
@@ -16,6 +17,9 @@ class Attachment {
     required this.content,
     required this.total,
   });
+
+  Attachment withTotal(double total) => Attachment(
+      id: id, timestamp: timestamp, content: content, total: Some(total));
 
   // Convert a Breed into a Map. The keys must correspond to the names of the
   // columns in the database.
@@ -54,16 +58,20 @@ class Attachment {
 class Receipt {
   final Attachment attachment;
   final List<Product> expenses;
+  final List<Discount> discounts;
 
-  const Receipt({required this.attachment, required this.expenses});
+  const Receipt(
+      {required this.attachment,
+      required this.expenses,
+      required this.discounts});
 }
 
 class FailedReceipt {
   final Attachment attachment;
-  final List<String> errors;
+  final String error;
 
   const FailedReceipt({
     required this.attachment,
-    required this.errors,
+    required this.error,
   });
 }

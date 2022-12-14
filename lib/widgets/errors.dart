@@ -23,7 +23,7 @@ class ErrorsPage extends StatelessWidget {
           children: errors
               .map((e) => ListTile(
                     title: Text(
-                        "${timestampString(e.attachment.timestamp)}: ${e.errors.join(",")}"),
+                        "${timestampString(e.attachment.timestamp)}: ${e.error}"),
                     onTap: () async {
                       Navigator.push(
                           context,
