@@ -1,21 +1,31 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dartz/dartz.dart';
+import 'package:ebon_tracker/data/product.dart';
+
 class Attachment {
   final String id;
   final int timestamp;
   final String content;
+  final Option<double> total;
 
   const Attachment({
     required this.id,
     required this.timestamp,
     required this.content,
+    required this.total,
   });
 
   // Convert a Breed into a Map. The keys must correspond to the names of the
   // columns in the database.
   Map<String, dynamic> toMap() {
-    return {'id': id, 'timestamp': timestamp, 'content': content};
+    return {
+      'id': id,
+      'timestamp': timestamp,
+      'content': content,
+      'total': total.toNullable()
+    };
   }
 
   factory Attachment.fromMap(Map<String, dynamic> map) {
@@ -23,6 +33,7 @@ class Attachment {
       id: map['id'] ?? '',
       timestamp: map['timestamp'] ?? 0,
       content: map['content'] ?? '',
+      total: optionOf(map['total']),
     );
   }
 
@@ -36,5 +47,23 @@ class Attachment {
   // Implement toString to make it easier to see information about
   // each breed when using the print statement.
   @override
-  String toString() => 'Attachment(id: $id, timestamp: $timestamp)';
+  String toString() =>
+      'Attachment(id: $id, timestamp: $timestamp, total: $total)';
+}
+
+class Receipt {
+  final Attachment attachment;
+  final List<Product> expenses;
+
+  const Receipt({required this.attachment, required this.expenses});
+}
+
+class FailedReceipt {
+  final Attachment attachment;
+  final List<String> errors;
+
+  const FailedReceipt({
+    required this.attachment,
+    required this.errors,
+  });
 }

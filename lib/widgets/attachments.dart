@@ -12,7 +12,6 @@ import 'package:intl/intl.dart';
 import '../application/database_service.dart';
 import '../application/helpers.dart';
 import '../data/attachment.dart';
-import '../data/receipt.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
 import 'errors.dart';
@@ -38,7 +37,6 @@ class Attachments extends StatelessWidget {
                   actions: [
                     IconButton(
                         onPressed: () async {
-                          // TODO: display errors.
                           List<Either<FailedReceipt, Receipt>> result =
                               await insertReceipts(state.attachments);
                           List<FailedReceipt> errors = result.lefts();
@@ -115,36 +113,39 @@ class Attachments extends StatelessWidget {
               ),
               body: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
-                  child: DataTable(
-                      showCheckboxColumn: false,
-                      columns: const <DataColumn>[
-                        DataColumn(
-                          label: Text('Id'),
-                        ),
-                        DataColumn(
-                          label: Text('Date'),
-                        ),
-                      ],
-                      rows: sorted
-                          .map((attachment) => DataRow(
-                                  onSelectChanged: (selected) => {
-                                        if (selected != null && selected)
-                                          {
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        PdfViewerPage(
-                                                            attachment:
-                                                                attachment)))
-                                          }
-                                      },
-                                  cells: [
-                                    DataCell(Text(attachment.id)),
-                                    DataCell(Text(
-                                        timestampString(attachment.timestamp)))
-                                  ]))
-                          .toList())));
+                  child: Container(
+                      width: double.infinity,
+                      child: DataTable(
+                          showCheckboxColumn: false,
+                          columns: const <DataColumn>[
+                            DataColumn(
+                              label: Text('Date'),
+                            ),
+                            DataColumn(
+                              label: Text('EUR'),
+                            ),
+                          ],
+                          rows: sorted
+                              .map((attachment) => DataRow(
+                                      onSelectChanged: (selected) => {
+                                            if (selected != null && selected)
+                                              {
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            PdfViewerPage(
+                                                                attachment:
+                                                                    attachment)))
+                                              }
+                                          },
+                                      cells: [
+                                        DataCell(Text(timestampString(
+                                            attachment.timestamp))),
+                                        DataCell(Text(attachment.total.fold(
+                                            () => "", (a) => a.toString()))),
+                                      ]))
+                              .toList()))));
         });
   }
 }

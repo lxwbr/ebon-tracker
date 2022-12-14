@@ -9,7 +9,6 @@ import 'package:pdf_render/pdf_render_widgets.dart';
 import '../application/database_service.dart';
 import '../application/helpers.dart';
 import '../data/product.dart';
-import '../data/receipt.dart';
 import 'errors.dart';
 
 DatabaseService _databaseService = DatabaseService();
@@ -55,7 +54,7 @@ void onPressed(bool? selected, String name, BuildContext context,
     var expenses = await _databaseService.expensesByName(name);
     List<Tuple2<Product, Attachment>> tuple = await Future.wait(expenses.map(
         (e) async => Tuple2<Product, Attachment>(
-            e, await _databaseService.attachment(e.messageId))));
+            e, (await _databaseService.attachment(e.messageId))!)));
 
     if (!mounted) return;
     Navigator.push(context,
@@ -87,11 +86,11 @@ class ScannedPdfViewerPage extends StatelessWidget {
                   ),
                 ],
                 rows: products
-                    .map((e) => DataRow(
+                    .map((product) => DataRow(
                             onSelectChanged: ((selected) async =>
-                                {onPressed(selected, e.name, context)}),
+                                {onPressed(selected, product.name, context)}),
                             cells: [
-                              DataCell(Text(e.toString())),
+                              DataCell(Text(product.toString())),
                             ]))
                     .toList())));
   }

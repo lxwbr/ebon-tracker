@@ -1,10 +1,12 @@
 import 'dart:async';
 
-import 'package:ebon_tracker/data/receipt.dart';
 import 'package:dartz/dartz.dart';
 
 import '../data/attachment.dart';
 import '../data/product.dart';
+import '../redux/attachments/attachments_actions.dart';
+import '../redux/attachments/attachments_state.dart';
+import '../redux/store.dart';
 import 'database_service.dart';
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -107,8 +109,9 @@ List<Either<String, Product>> consume(String messageId, List<String> ebonLines,
   }
 }
 
-Future<List<String>> read(String messageId, String content) async {
-  PdfDocument document = PdfDocument.fromBase64String(content);
+Future<Tuple2<double, List<Either<String, Product>>>> read(
+    Attachment attachment) async {
+  PdfDocument document = PdfDocument.fromBase64String(attachment.content);
   //Create a new instance of the PdfTextExtractor.
   PdfTextExtractor extractor = PdfTextExtractor(document);
 
@@ -120,17 +123,13 @@ Future<List<String>> read(String messageId, String content) async {
   int first = textLines.indexWhere((element) => element.text.contains("EUR"));
   int last = textLines
       .indexWhere((element) => element.text.contains("--------------"));
+  double total = double.parse(
+      textLines[last + 1].text.trim().split(" ").last.replaceAll(",", "."));
 
   List<String> expenses =
       textLines.sublist(first + 1, last).map((e) => e.text).toList();
 
-  return expenses;
-}
-
-Future<List<Either<String, Product>>> scanAttachment(
-    Attachment attachment) async {
-  List<String> splitted = await read(attachment.id, attachment.content);
-  return consume(attachment.id, splitted, List.empty());
+  return Tuple2(total, consume(attachment.id, expenses, List.empty()));
 }
 
 DatabaseService _databaseService = DatabaseService();
@@ -148,34 +147,49 @@ extension ListEitherExtension<L, R> on List<Either<L, R>> {
 Future<Either<FailedReceipt, Receipt>> insertReceipt(
     Attachment attachment) async {
   // Check if there expenses for this attachment has been scanned in the past
-  List<Product> existing =
+  Attachment? existing = await _databaseService.attachment(attachment.id);
+
+  List<Product> expenses =
       await _databaseService.expensesByMessageId(attachment.id);
 
-  if (existing.isEmpty) {
-    List<Either<String, Product>> scanned = await scanAttachment(attachment);
+  if (expenses.isEmpty || existing == null || existing.total == null) {
+    Tuple2<double, List<Either<String, Product>>> scanned =
+        await read(attachment);
 
     // Filter errors only
-    List<String> errors = scanned.lefts();
+    List<String> errors = scanned.value2.lefts();
 
     // If there are no errors scanning the PDF, proceed with inserting expenses to DB
     if (errors.isEmpty) {
       // Filter successful reads only
-      List<Product> successful = scanned.rights();
+      List<Product> successful = scanned.value2.rights();
+
+      attachment = Attachment(
+          id: attachment.id,
+          timestamp: attachment.timestamp,
+          total: some(scanned.value1),
+          content: attachment.content);
+
+      if (existing == null) {
+        await _databaseService.insertAttachment(attachment);
+      } else if (existing.total.isNone()) {
+        await _databaseService.updateAttachment(attachment);
+      }
 
       await _databaseService.insertExpenses(attachment.id, successful);
 
-      return Right(Receipt(
-          id: attachment.id,
-          timestamp: attachment.timestamp,
-          expenses: successful));
+      Redux.store.dispatch(SetAttachmentsStateAction(AttachmentsState(
+          attachments: Redux.store.state.attachmentsState.attachments
+              .map((a) => a.id == attachment.id ? attachment : a)
+              .toList(),
+          loading: false)));
+
+      return Right(Receipt(attachment: attachment, expenses: successful));
     } else {
       return Left(FailedReceipt(errors: errors, attachment: attachment));
     }
   } else {
-    return Right(Receipt(
-        id: attachment.id,
-        timestamp: attachment.timestamp,
-        expenses: existing));
+    return Right(Receipt(attachment: existing, expenses: expenses));
   }
 }
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dartz/dartz.dart';
 import 'package:ebon_tracker/data/attachment.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:redux/redux.dart';
@@ -98,7 +99,8 @@ Future<void> fetchAttachmentsAction(Store<AppState> store, int? after) async {
 
           int internalDate = int.parse(data['internalDate']) ~/ 1000;
 
-          return Attachment(id: id, timestamp: internalDate, content: content);
+          return Attachment(
+              id: id, timestamp: internalDate, content: content, total: none());
         } else {
           return Future.error('Could not fetch attachment');
         }

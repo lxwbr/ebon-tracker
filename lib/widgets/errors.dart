@@ -1,8 +1,8 @@
-import 'package:ebon_tracker/data/receipt.dart';
 import 'package:ebon_tracker/widgets/pdfviewerpage.dart';
 import 'package:flutter/material.dart';
 
 import '../application/helpers.dart';
+import '../data/attachment.dart';
 
 class ErrorsPage extends StatelessWidget {
   const ErrorsPage({super.key, required this.errors});

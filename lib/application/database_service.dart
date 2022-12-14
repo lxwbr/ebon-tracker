@@ -1,4 +1,5 @@
 import 'package:ebon_tracker/data/attachment.dart';
+import 'package:ebon_tracker/data/receipt.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -43,11 +44,11 @@ class DatabaseService {
   Future<void> _onCreate(Database db, int version) async {
     // Run the CREATE {attachments} TABLE statement on the database.
     await db.execute(
-      'CREATE TABLE attachments(id TEXT, messageId VARCHAR, timestamp TIMESTAMP, content BLOB, PRIMARY KEY (id))',
+      'CREATE TABLE receipts(id VARCHAR, timestamp TIMESTAMP, content BLOB, total REAL, PRIMARY KEY (id))',
     );
 
     await db.execute(
-      'CREATE TABLE expenses(messageId VARCHAR, name VARCHAR, price REAL, quantity REAL, unit VARCHAR, discount REAL, total REAL, FOREIGN KEY(messageId) REFERENCES attachments(id))',
+      'CREATE TABLE expenses(messageId VARCHAR, name VARCHAR, price REAL, quantity REAL, unit VARCHAR, discount REAL, total REAL, FOREIGN KEY(messageId) REFERENCES receipts(id))',
     );
   }
 
@@ -109,10 +110,22 @@ class DatabaseService {
     //
     // In this case, replace any previous data.
     await db.insert(
-      'attachments',
+      'receipts',
       attachment.toMap(),
       conflictAlgorithm: ConflictAlgorithm.fail,
     );
+  }
+
+  Future<void> updateAttachment(Attachment attachment) async {
+    // Get a reference to the database.
+    final db = await _databaseService.database;
+
+    // Insert the Breed into the correct table. You might also specify the
+    // `conflictAlgorithm` to use in case the same breed is inserted twice.
+    //
+    // In this case, replace any previous data.
+    await db.update('receipts', attachment.toMap(),
+        where: 'id = ?', whereArgs: [attachment.id]);
   }
 
   // A method that retrieves all the attachments from the breeds table.
@@ -121,18 +134,20 @@ class DatabaseService {
     final db = await _databaseService.database;
 
     // Query the table for all the attachments.
-    final List<Map<String, dynamic>> maps = await db.query('attachments');
+    final List<Map<String, dynamic>> maps = await db.query('receipts');
 
     // Convert the List<Map<String, dynamic> into a List<Attachment>.
     return List.generate(
         maps.length, (index) => Attachment.fromMap(maps[index]));
   }
 
-  Future<Attachment> attachment(String id) async {
+  Future<Attachment?> attachment(String id) async {
     final db = await _databaseService.database;
     final List<Map<String, dynamic>> maps =
-        await db.query('attachments', where: 'id = ?', whereArgs: [id]);
-    return Attachment.fromMap(maps[0]);
+        await db.query('receipts', where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return Attachment.fromMap(maps[0]);
+    }
   }
 
   // A method that deletes a breed data from the attachments table.
@@ -142,7 +157,7 @@ class DatabaseService {
 
     // Remove the Breed from the database.
     await db.delete(
-      'attachments',
+      'receipts',
       // Use a `where` clause to delete a specific breed.
       where: 'id = ?',
       // Pass the Breed's id as a whereArg to prevent SQL injection.
@@ -157,7 +172,7 @@ class DatabaseService {
 
     // Remove the Breed from the database.
     await db.delete(
-      'attachments',
+      'receipts',
     );
   }
 
