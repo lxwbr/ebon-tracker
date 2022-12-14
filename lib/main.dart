@@ -1,4 +1,5 @@
 import 'package:ebon_tracker/widgets/attachments.dart';
+import 'package:ebon_tracker/widgets/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -24,7 +25,7 @@ void main() async {
             builder: (context, account) {
               if (account != null) {
                 dbListAttachmentsAction(Redux.store);
-                return Attachments(account: account);
+                return Main(account: account);
               } else {
                 return SignIn();
               }

@@ -162,7 +162,8 @@ class DatabaseService {
     final db = await _databaseService.database;
 
     // Query the table for all the attachments.
-    final List<Map<String, dynamic>> maps = await db.query('receipts');
+    final List<Map<String, dynamic>> maps =
+        await db.query('receipts', orderBy: 'timestamp DESC');
 
     // Convert the List<Map<String, dynamic> into a List<Attachment>.
     return List.generate(

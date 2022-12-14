@@ -29,123 +29,41 @@ class Attachments extends StatelessWidget {
         distinct: true,
         converter: (store) => store.state.attachmentsState,
         builder: (context, state) {
-          List<Attachment> sorted = state.attachments.toList();
-          sorted.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-          return Scaffold(
-              appBar: AppBar(
-                  title: const Text('Attachments'),
-                  actions: [
-                    IconButton(
-                        onPressed: () async {
-                          List<Either<FailedReceipt, Receipt>> result =
-                              await insertReceipts(state.attachments);
-                          List<FailedReceipt> errors = result.lefts();
-
-                          if (errors.isNotEmpty) {
-                            if (!mounted) return;
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        ErrorsPage(errors: errors)));
-                          }
-                        },
-                        icon: const Icon(Icons.scanner)),
-                    IconButton(
-                        onPressed: () async {
-                          if (sorted.isNotEmpty) {
-                            fetchAttachmentsAction(
-                                Redux.store, sorted.first.timestamp);
-                          } else {
-                            fetchAttachmentsAction(Redux.store, null);
-                          }
-                        },
-                        icon: const Icon(Icons.refresh))
-                  ],
-                  bottom: (() {
-                    if (state.loading) {
-                      return const PreferredSize(
-                          preferredSize: Size.fromHeight(6.0),
-                          child: LinearProgressIndicator(
-                            semanticsLabel: 'Linear progress indicator',
-                          ));
-                    }
-                  })()),
-              drawer: Drawer(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: <Widget>[
-                    DrawerHeader(
-                      decoration: const BoxDecoration(
-                        color: Colors.blue,
-                      ),
-                      child: ListTile(
-                        leading: GoogleUserCircleAvatar(
-                          identity: account,
+          return SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Container(
+                  width: double.infinity,
+                  child: DataTable(
+                      showCheckboxColumn: false,
+                      columns: const <DataColumn>[
+                        DataColumn(
+                          label: Text('Date'),
                         ),
-                        title: Text(account.displayName ?? ''),
-                        subtitle: Text(account.email),
-                      ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.delete),
-                      title: const Text('Clear attachments table'),
-                      onTap: () async {
-                        await deleteAttachmentsAction(Redux.store);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.delete),
-                      title: const Text('Clear expenses table'),
-                      onTap: () async {
-                        await _databaseService.deleteExpenses();
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.logout),
-                      title: const Text('Sign out'),
-                      onTap: () async {
-                        signOutAction(Redux.store);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              body: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Container(
-                      width: double.infinity,
-                      child: DataTable(
-                          showCheckboxColumn: false,
-                          columns: const <DataColumn>[
-                            DataColumn(
-                              label: Text('Date'),
-                            ),
-                            DataColumn(
-                              label: Text('EUR'),
-                            ),
-                          ],
-                          rows: sorted
-                              .map((attachment) => DataRow(
-                                      onSelectChanged: (selected) => {
-                                            if (selected != null && selected)
-                                              {
-                                                Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (_) =>
-                                                            PdfViewerPage(
-                                                                attachment:
-                                                                    attachment)))
-                                              }
-                                          },
-                                      cells: [
-                                        DataCell(Text(timestampString(
-                                            attachment.timestamp))),
-                                        DataCell(Text(attachment.total.fold(
-                                            () => "", (a) => a.toString()))),
-                                      ]))
-                              .toList()))));
+                        DataColumn(
+                          label: Text('EUR'),
+                        ),
+                      ],
+                      rows: state.attachments
+                          .map((attachment) => DataRow(
+                                  onSelectChanged: (selected) => {
+                                        if (selected != null && selected)
+                                          {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        PdfViewerPage(
+                                                            attachment:
+                                                                attachment)))
+                                          }
+                                      },
+                                  cells: [
+                                    DataCell(Text(
+                                        timestampString(attachment.timestamp))),
+                                    DataCell(Text(attachment.total
+                                        .fold(() => "", (a) => a.toString()))),
+                                  ]))
+                          .toList())));
         });
   }
 }

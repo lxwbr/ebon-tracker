@@ -120,8 +120,10 @@ Future<void> fetchAttachmentsAction(Store<AppState> store, int? after) async {
       await _databaseService.insertAttachment(attachment);
     });
 
+    filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
     store.dispatch(SetAttachmentsStateAction(AttachmentsState(
-        attachments: [...store.state.attachmentsState.attachments, ...filtered],
+        attachments: [...filtered, ...store.state.attachmentsState.attachments],
         loading: false)));
   }
 }
