@@ -16,6 +16,7 @@ import '../data/attachment.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
 import 'errors.dart';
+import 'expenses.dart';
 import 'pdfviewerpage.dart';
 
 DatabaseService _databaseService = DatabaseService();
@@ -41,7 +42,7 @@ class _MainState extends State<Main> {
   Widget build(BuildContext context, [bool mounted = true]) {
     List<Widget> screens = [
       Attachments(account: widget.account),
-      Text("Second")
+      const Expenses()
     ];
 
     return StoreConnector<AppState, AttachmentsState>(
@@ -50,7 +51,6 @@ class _MainState extends State<Main> {
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
-                title: const Text('Receipts'),
                 actions: [
                   IconButton(
                       onPressed: () async {

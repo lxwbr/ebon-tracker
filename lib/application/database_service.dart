@@ -91,6 +91,13 @@ class DatabaseService {
         'INSERT INTO expenses(messageId, name, quantity, price, total, discount, unit) VALUES $values');
   }
 
+  Future<List<Product>> expenses() async {
+    final db = await _databaseService.database;
+    final List<Map<String, dynamic>> maps =
+        await db.query('expenses', orderBy: "name");
+    return maps.map((e) => Product.fromMap(e)).toList();
+  }
+
   Future<List<Product>> expensesByName(String name) async {
     final db = await _databaseService.database;
     final List<Map<String, dynamic>> maps =
