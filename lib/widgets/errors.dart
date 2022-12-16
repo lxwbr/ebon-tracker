@@ -2,7 +2,7 @@ import 'package:ebon_tracker/widgets/attachment.dart';
 import 'package:flutter/material.dart';
 
 import '../application/helpers.dart';
-import '../data/attachment.dart';
+import '../data/receipt.dart';
 
 class ErrorsPage extends StatelessWidget {
   const ErrorsPage({super.key, required this.errors});

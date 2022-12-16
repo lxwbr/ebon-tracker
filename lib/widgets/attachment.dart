@@ -4,6 +4,7 @@ import 'package:ebon_tracker/widgets/receipt.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf_render/pdf_render_widgets.dart';
 
+import '../data/receipt.dart';
 import 'errors.dart';
 
 class AttachmentPage extends StatelessWidget {

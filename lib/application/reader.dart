@@ -5,6 +5,7 @@ import 'package:dartz/dartz.dart';
 import '../data/attachment.dart';
 import '../data/discount.dart';
 import '../data/expense.dart';
+import '../data/receipt.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
 import '../redux/store.dart';

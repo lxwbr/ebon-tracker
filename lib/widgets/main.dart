@@ -11,6 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../application/database_service.dart';
 import '../data/attachment.dart';
+import '../data/receipt.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
 import 'errors.dart';
