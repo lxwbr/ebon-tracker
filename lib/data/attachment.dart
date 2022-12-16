@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
-import 'package:ebon_tracker/data/product.dart';
+import 'package:ebon_tracker/data/expense.dart';
 
 import 'discount.dart';
 
@@ -58,7 +58,7 @@ class Attachment {
 
 class Receipt {
   final Attachment attachment;
-  final List<Product> expenses;
+  final List<Expense> expenses;
   final List<Discount> discounts;
 
   const Receipt(

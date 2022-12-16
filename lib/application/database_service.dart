@@ -3,7 +3,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../data/discount.dart';
-import '../data/product.dart';
+import '../data/expense.dart';
 
 class DatabaseService {
   // Singleton pattern
@@ -57,7 +57,7 @@ class DatabaseService {
   }
 
   // Define a function that inserts attachments into the database
-  Future<void> insertExpense(String messageId, Product expense) async {
+  Future<void> insertExpense(String messageId, Expense expense) async {
     // Get a reference to the database.
     final db = await _databaseService.database;
 
@@ -73,7 +73,7 @@ class DatabaseService {
   }
 
   // Define a function that inserts attachments into the database
-  Future<void> insertExpenses(String messageId, List<Product> expenses) async {
+  Future<void> insertExpenses(String messageId, List<Expense> expenses) async {
     // Get a reference to the database.
     final db = await _databaseService.database;
 
@@ -90,25 +90,25 @@ class DatabaseService {
         'INSERT INTO expenses(messageId, name, quantity, price, total, discount, unit) VALUES $values');
   }
 
-  Future<List<Product>> expenses() async {
+  Future<List<Expense>> expenses() async {
     final db = await _databaseService.database;
     final List<Map<String, dynamic>> maps =
         await db.query('expenses', orderBy: "name");
-    return maps.map((e) => Product.fromMap(e)).toList();
+    return maps.map((e) => Expense.fromMap(e)).toList();
   }
 
-  Future<List<Product>> expensesByName(String name) async {
+  Future<List<Expense>> expensesByName(String name) async {
     final db = await _databaseService.database;
     final List<Map<String, dynamic>> maps =
         await db.query('expenses', where: 'name = ?', whereArgs: [name]);
-    return maps.map((e) => Product.fromMap(e)).toList();
+    return maps.map((e) => Expense.fromMap(e)).toList();
   }
 
-  Future<List<Product>> expensesByMessageId(String messageId) async {
+  Future<List<Expense>> expensesByMessageId(String messageId) async {
     final db = await _databaseService.database;
     final List<Map<String, dynamic>> maps = await db
         .query('expenses', where: 'messageId = ?', whereArgs: [messageId]);
-    return maps.map((e) => Product.fromMap(e)).toList();
+    return maps.map((e) => Expense.fromMap(e)).toList();
   }
 
   Future<void> insertDiscounts(

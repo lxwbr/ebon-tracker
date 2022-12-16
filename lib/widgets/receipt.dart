@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../application/database_service.dart';
 import '../data/attachment.dart';
-import '../data/product.dart';
+import '../data/expense.dart';
 import 'expense.dart';
 
 DatabaseService _databaseService = DatabaseService();
 
 class ReceiptPage extends StatelessWidget {
-  const ReceiptPage({super.key, required this.products});
-  final List<Product> products;
+  const ReceiptPage({super.key, required this.expenses});
+  final List<Expense> expenses;
 
   @override
   Widget build(BuildContext context, [mounted = true]) {
@@ -32,15 +32,15 @@ class ReceiptPage extends StatelessWidget {
                     label: Text('Expense'),
                   ),
                 ],
-                rows: products
-                    .map((product) => DataRow(
+                rows: expenses
+                    .map((expense) => DataRow(
                             onSelectChanged: ((selected) async {
                               if (selected != null && selected) {
                                 var expenses = await _databaseService
-                                    .expensesByName(product.name);
-                                List<Tuple2<Product, Attachment>> tuple =
+                                    .expensesByName(expense.name);
+                                List<Tuple2<Expense, Attachment>> tuple =
                                     await Future.wait(expenses.map((e) async =>
-                                        Tuple2<Product, Attachment>(
+                                        Tuple2<Expense, Attachment>(
                                             e,
                                             (await _databaseService
                                                 .attachment(e.messageId))!)));
@@ -50,11 +50,11 @@ class ReceiptPage extends StatelessWidget {
                                     context,
                                     MaterialPageRoute(
                                         builder: (_) =>
-                                            ExpensePage(products: tuple)));
+                                            ExpensePage(expenses: tuple)));
                               }
                             }),
                             cells: [
-                              DataCell(Text(product.toString())),
+                              DataCell(Text(expense.toString())),
                             ]))
                     .toList())));
   }

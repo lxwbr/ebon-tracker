@@ -3,15 +3,15 @@ import 'package:dartz/dartz.dart';
 import 'package:ebon_tracker/data/attachment.dart';
 import 'package:flutter/material.dart';
 import '../application/helpers.dart';
-import '../data/product.dart';
+import '../data/expense.dart';
 
 class ExpensePage extends StatelessWidget {
-  const ExpensePage({super.key, required this.products});
-  final List<Tuple2<Product, Attachment>> products;
+  const ExpensePage({super.key, required this.expenses});
+  final List<Tuple2<Expense, Attachment>> expenses;
 
   @override
   Widget build(BuildContext context) {
-    List<Tuple2<Product, Attachment>> sorted = products.toList();
+    List<Tuple2<Expense, Attachment>> sorted = expenses.toList();
 
     sorted.sort((a, b) => b.value2.timestamp.compareTo(a.value2.timestamp));
 

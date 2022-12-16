@@ -4,7 +4,7 @@ import 'package:dartz/dartz.dart';
 
 import '../data/attachment.dart';
 import '../data/discount.dart';
-import '../data/product.dart';
+import '../data/expense.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
 import '../redux/store.dart';
@@ -12,12 +12,12 @@ import 'database_service.dart';
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
-String sanitize(String product) {
-  product = product.trim();
-  if (product.endsWith(" *")) {
-    return product.substring(0, product.length - 2);
+String sanitize(String string) {
+  string = string.trim();
+  if (string.endsWith(" *")) {
+    return string.substring(0, string.length - 2);
   } else {
-    return product;
+    return string;
   }
 }
 
@@ -84,12 +84,12 @@ class NamedValue {
 }
 
 Either<String, Receipt> consume(Attachment attachment, List<String> lines,
-    List<Product> products, List<Discount> discounts,
+    List<Expense> expenses, List<Discount> discounts,
     [Quantity? quantity]) {
   if (lines.isEmpty) {
     return Right(Receipt(
         attachment: attachment,
-        expenses: products.reversed.toList(),
+        expenses: expenses.reversed.toList(),
         discounts: discounts.reversed.toList()));
   }
 
@@ -102,7 +102,7 @@ Either<String, Receipt> consume(Attachment attachment, List<String> lines,
             applyDiscount(namedValue.name, discounts, []);
         discounts = discounted.value2;
 
-        products.add(Product.from(
+        expenses.add(Expense.from(
             attachment.id,
             namedValue.name,
             namedValue.value,
@@ -110,10 +110,10 @@ Either<String, Receipt> consume(Attachment attachment, List<String> lines,
             quantity ??
                 Quantity(n: 1, price: namedValue.value, unit: Units.none)));
       });
-      return consume(attachment, lines, products, discounts);
+      return consume(attachment, lines, expenses, discounts);
     } else {
       return consume(
-          attachment, lines, products, discounts, parseQuantity(sanitized));
+          attachment, lines, expenses, discounts, parseQuantity(sanitized));
     }
   } catch (ex) {
     return Left(ex.toString());
@@ -161,7 +161,7 @@ Future<Receipt> insertReceipt(Attachment attachment) async {
   // Check if there expenses for this attachment has been scanned in the past
   Attachment? existing = await _databaseService.attachment(attachment.id);
 
-  List<Product> expenses =
+  List<Expense> expenses =
       await _databaseService.expensesByMessageId(attachment.id);
 
   if (expenses.isEmpty || existing == null) {

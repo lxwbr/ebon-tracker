@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 
 import '../application/database_service.dart';
-import '../data/product.dart';
+import '../data/expense.dart';
 import '../redux/attachments/attachments_state.dart';
 import 'attachment.dart';
 
@@ -17,7 +17,7 @@ class ExpensesPage extends StatefulWidget {
 }
 
 class _ExpensesPageState extends State<ExpensesPage> {
-  List<Product> _expenses = [];
+  List<Expense> _expenses = [];
   @override
   void initState() {
     super.initState();

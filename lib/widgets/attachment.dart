@@ -28,7 +28,7 @@ class AttachmentPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (_) =>
-                              ReceiptPage(products: receipt.expenses)));
+                              ReceiptPage(expenses: receipt.expenses)));
                 } catch (ex) {
                   Navigator.push(
                       context,

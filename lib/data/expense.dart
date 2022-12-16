@@ -1,4 +1,4 @@
-class Product {
+class Expense {
   final String name;
   final double price;
   final double quantity;
@@ -6,11 +6,11 @@ class Product {
   final double discount;
   final String messageId;
 
-  const Product({
+  const Expense({
     required this.name,
     // Raw price per unit without any discount.
     required this.price,
-    // Discount for this product.
+    // Discount for this expense.
     required this.discount,
     required this.quantity,
     required this.unit,
@@ -20,9 +20,9 @@ class Product {
   double total() =>
       double.parse((price * quantity + discount).toStringAsFixed(2));
 
-  factory Product.from(String messageId, String name, double total,
+  factory Expense.from(String messageId, String name, double total,
       double discount, Quantity quantity) {
-    Product product = Product(
+    Expense expense = Expense(
         messageId: messageId,
         name: name,
         price: quantity.price,
@@ -30,13 +30,13 @@ class Product {
         quantity: quantity.n,
         unit: quantity.unit);
 
-    if (double.parse((product.total() - product.discount).toStringAsFixed(2)) !=
+    if (double.parse((expense.total() - expense.discount).toStringAsFixed(2)) !=
         total) {
       throw AssertionError(
-          "Calculated total ${product.total()}+${product.discount.abs()} was not equal to product total $total");
+          "Calculated total ${expense.total()}+${expense.discount.abs()} was not equal to expense total $total");
     }
 
-    return product;
+    return expense;
   }
 
   @override
@@ -60,7 +60,7 @@ class Product {
     };
   }
 
-  factory Product.fromMap(Map<String, dynamic> map) {
+  factory Expense.fromMap(Map<String, dynamic> map) {
     late Units u;
     switch (map['unit']) {
       case "Units.none":
@@ -72,7 +72,7 @@ class Product {
       default:
         throw UnimplementedError();
     }
-    return Product(
+    return Expense(
       messageId: map['messageId'] ?? '',
       name: map['name'] ?? '',
       price: map['price'] ?? 0.0,
