@@ -1,6 +1,3 @@
-import 'package:ebon_tracker/data/attachment.dart';
-import 'package:ebon_tracker/data/product.dart';
-
 class Receipt {
   final String id;
   final int timestamp;

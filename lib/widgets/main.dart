@@ -4,20 +4,17 @@ import 'package:dartz/dartz.dart' hide State;
 import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
-import 'package:ebon_tracker/widgets/attachments.dart';
+import 'package:ebon_tracker/widgets/receipts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:intl/intl.dart';
 
 import '../application/database_service.dart';
-import '../application/helpers.dart';
 import '../data/attachment.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
 import 'errors.dart';
 import 'expenses.dart';
-import 'pdfviewerpage.dart';
 
 DatabaseService _databaseService = DatabaseService();
 
@@ -41,8 +38,8 @@ class _MainState extends State<Main> {
   @override
   Widget build(BuildContext context, [bool mounted = true]) {
     List<Widget> screens = [
-      Attachments(account: widget.account),
-      const Expenses()
+      ReceiptsPage(account: widget.account),
+      const ExpensesPage()
     ];
 
     return StoreConnector<AppState, AttachmentsState>(

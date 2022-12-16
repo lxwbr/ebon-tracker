@@ -1,33 +1,22 @@
-import 'dart:convert';
-
-import 'package:dartz/dartz.dart' hide State;
-import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/redux/store.dart';
-import 'package:ebon_tracker/redux/user/user_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:intl/intl.dart';
 
 import '../application/database_service.dart';
-import '../application/helpers.dart';
-import '../data/attachment.dart';
 import '../data/product.dart';
-import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
-import 'errors.dart';
-import 'pdfviewerpage.dart';
+import 'attachment.dart';
 
 DatabaseService _databaseService = DatabaseService();
 
-class Expenses extends StatefulWidget {
-  const Expenses({super.key});
+class ExpensesPage extends StatefulWidget {
+  const ExpensesPage({super.key});
 
   @override
-  State<Expenses> createState() => _ExpensesState();
+  State<ExpensesPage> createState() => _ExpensesPageState();
 }
 
-class _ExpensesState extends State<Expenses> {
+class _ExpensesPageState extends State<ExpensesPage> {
   List<Product> _expenses = [];
   @override
   void initState() {
@@ -47,7 +36,7 @@ class _ExpensesState extends State<Expenses> {
         builder: (context, state) {
           return SingleChildScrollView(
               scrollDirection: Axis.vertical,
-              child: Container(
+              child: SizedBox(
                   width: double.infinity,
                   child: DataTable(
                       showCheckboxColumn: false,
@@ -67,7 +56,7 @@ class _ExpensesState extends State<Expenses> {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (_) => PdfViewerPage(
+                                                    builder: (_) => AttachmentPage(
                                                         attachment: state
                                                             .attachments
                                                             .firstWhere((element) =>

@@ -1,4 +1,4 @@
-import 'package:ebon_tracker/widgets/attachments.dart';
+import 'package:ebon_tracker/widgets/receipts.dart';
 import 'package:ebon_tracker/widgets/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';

@@ -1,4 +1,4 @@
-import 'package:ebon_tracker/widgets/pdfviewerpage.dart';
+import 'package:ebon_tracker/widgets/attachment.dart';
 import 'package:flutter/material.dart';
 
 import '../application/helpers.dart';
@@ -17,7 +17,7 @@ class ErrorsPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        drawer: Drawer(),
+        drawer: const Drawer(),
         body: ListView(
           padding: EdgeInsets.zero,
           children: errors
@@ -29,7 +29,7 @@ class ErrorsPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                               builder: (_) =>
-                                  PdfViewerPage(attachment: e.attachment)));
+                                  AttachmentPage(attachment: e.attachment)));
                     },
                   ))
               .toList(),

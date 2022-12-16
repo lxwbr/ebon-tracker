@@ -1,9 +1,8 @@
-import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/data/attachment.dart';
-import 'package:ebon_tracker/data/receipt.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../data/discount.dart';
 import '../data/product.dart';
 
 class DatabaseService {
@@ -183,6 +182,8 @@ class DatabaseService {
         await db.query('receipts', where: 'id = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       return Attachment.fromMap(maps[0]);
+    } else {
+      return null;
     }
   }
 

@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
-import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/data/product.dart';
+
+import 'discount.dart';
 
 class Attachment {
   final String id;

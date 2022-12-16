@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 
 import '../data/attachment.dart';
+import '../data/discount.dart';
 import '../data/product.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
@@ -20,16 +21,16 @@ String sanitize(String product) {
   }
 }
 
-Entry parseEntry(String string) {
+Either<Discount, NamedValue> parseEntry(String messageId, String string) {
   int numberIndex = string.substring(0, string.length - 2).lastIndexOf(" ");
   double value = double.parse(string
       .substring(numberIndex + 1, string.length - 2)
       .replaceAll(",", "."));
   String name = string.substring(0, numberIndex).trim();
   if (value < .0) {
-    return Discount(name, value);
+    return Left(Discount(messageId: messageId, name: name, value: value));
   } else {
-    return Expense(name, value);
+    return Right(NamedValue(name: name, value: value));
   }
 }
 
@@ -75,30 +76,11 @@ Quantity parseQuantity(String string) {
   }
 }
 
-abstract class Entry {
-  String name;
-  double value;
-  Entry._({required this.name, required this.value});
-}
+class NamedValue {
+  final String name;
+  final double value;
 
-class Discount extends Entry {
-  Discount(name, value) : super._(name: name, value: value);
-
-  factory Discount.fromMap(Map<String, dynamic> map) {
-    return Discount(
-      map['name'] ?? '',
-      map['value'] ?? 0.0,
-    );
-  }
-
-  @override
-  String toString() {
-    return "$name: $value";
-  }
-}
-
-class Expense extends Entry {
-  Expense(name, value) : super._(name: name, value: value);
+  const NamedValue({required this.name, required this.value});
 }
 
 Either<String, Receipt> consume(Attachment attachment, List<String> lines,
@@ -114,21 +96,20 @@ Either<String, Receipt> consume(Attachment attachment, List<String> lines,
   try {
     String sanitized = sanitize(lines.removeLast());
     if (sanitized.endsWith(" B") || sanitized.endsWith(" A")) {
-      Entry entry = parseEntry(sanitized);
-      if (entry is Discount) {
-        discounts.add(entry);
-      } else {
+      parseEntry(attachment.id, sanitized)
+          .fold((discount) => discounts.add(discount), (namedValue) {
         Tuple2<double, List<Discount>> discounted =
-            applyDiscount(entry.name, discounts, []);
+            applyDiscount(namedValue.name, discounts, []);
         discounts = discounted.value2;
 
         products.add(Product.from(
             attachment.id,
-            entry.name,
-            entry.value,
+            namedValue.name,
+            namedValue.value,
             discounted.value1,
-            quantity ?? Quantity(n: 1, price: entry.value, unit: Units.none)));
-      }
+            quantity ??
+                Quantity(n: 1, price: namedValue.value, unit: Units.none)));
+      });
       return consume(attachment, lines, products, discounts);
     } else {
       return consume(
