@@ -1,11 +1,13 @@
 import 'dart:async';
 
-import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart' hide Unit;
 
 import '../data/attachment.dart';
 import '../data/discount.dart';
 import '../data/expense.dart';
+import '../data/quantity.dart';
 import '../data/receipt.dart';
+import '../data/unit.dart';
 import '../redux/attachments/attachments_actions.dart';
 import '../redux/attachments/attachments_state.dart';
 import '../redux/store.dart';
@@ -60,13 +62,13 @@ Quantity parseQuantity(String string) {
     if (splitted.first.contains("Stk")) {
       double n = double.parse(splitted.first.split("Stk").first.trim());
       double price = double.parse(splitted.last.trim().replaceAll(",", "."));
-      return Quantity(n: n, price: price, unit: Units.none);
+      return Quantity(n: n, price: price, unit: Unit.none);
     } else if (splitted.first.contains("kg")) {
       double n = double.parse(
           splitted.first.split("kg").first.trim().replaceAll(",", "."));
       double price = double.parse(
           splitted.last.split("EUR/kg").first.trim().replaceAll(",", "."));
-      return Quantity(n: n, price: price, unit: Units.kg);
+      return Quantity(n: n, price: price, unit: Unit.kg);
     } else {
       throw AssertionError(
           "Assumed a quantity of 'kg' or 'Stk' but got: ${splitted.first}");
@@ -109,7 +111,7 @@ Either<String, Receipt> consume(Attachment attachment, List<String> lines,
             namedValue.value,
             discounted.value1,
             quantity ??
-                Quantity(n: 1, price: namedValue.value, unit: Units.none)));
+                Quantity(n: 1, price: namedValue.value, unit: Unit.none)));
       });
       return consume(attachment, lines, expenses, discounts);
     } else {

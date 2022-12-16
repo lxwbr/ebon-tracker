@@ -39,10 +39,7 @@ class DatabaseService {
     );
   }
 
-  // When the database is first created, create a table to store breeds
-  // and a table to store dogs.
   Future<void> _onCreate(Database db, int version) async {
-    // Run the CREATE {attachments} TABLE statement on the database.
     await db.execute(
       'CREATE TABLE receipts(id VARCHAR, timestamp TIMESTAMP, content BLOB, total REAL, PRIMARY KEY (id))',
     );
@@ -60,11 +57,6 @@ class DatabaseService {
   Future<void> insertExpense(String messageId, Expense expense) async {
     // Get a reference to the database.
     final db = await _databaseService.database;
-
-    // Insert the Breed into the correct table. You might also specify the
-    // `conflictAlgorithm` to use in case the same breed is inserted twice.
-    //
-    // In this case, replace any previous data.
     await db.insert(
       'expenses',
       expense.toMap(messageId),
