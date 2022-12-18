@@ -33,7 +33,7 @@ Future<Iterable<EitherReceipt>> _processPage(
   if (token != null) {
     uri = '$uri&pageToken=$token';
   }
-  uri = '$uri&maxResults=10';
+  uri = '$uri&maxResults=5';
 
   final http.Response response =
       await http.get(Uri.parse(uri), headers: headers);
@@ -56,16 +56,6 @@ Future<Iterable<EitherReceipt>> _processPage(
         messageIds.map((messageId) => _fetchPdf(headers, messageId, email)));
 
     Iterable<EitherReceipt> receipts = await process(pdfs);
-
-    processedCount += messageIds.length;
-    double processed = processedCount / resultSizeEstimate;
-    if (processed > 1.0) {
-      processed = 1.0;
-    }
-
-    print(
-        "PROCESSED_COUNT: $processedCount ESTIMATE: $resultSizeEstimate PROCESSED: $processed");
-    loadingAction(processed);
 
     String? nextPageToken = data['nextPageToken'];
     if (nextPageToken != null) {

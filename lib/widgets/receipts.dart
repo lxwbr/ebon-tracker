@@ -25,7 +25,6 @@ class ReceiptsPage extends StatelessWidget {
           return LayoutBuilder(
               builder: (context, constraints) => RefreshIndicator(
                   onRefresh: () async {
-                    loadingAction();
                     int? latest;
                     if (state.attachments.isNotEmpty) {
                       latest = state.attachments
@@ -40,7 +39,6 @@ class ReceiptsPage extends StatelessWidget {
                         await processMailbox(account, insertReceipts, latest);
 
                     List<FailedReceipt> errors = result.lefts();
-                    loadedAction();
 
                     if (errors.isNotEmpty) {
                       if (!mounted) return;

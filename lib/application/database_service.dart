@@ -58,12 +58,14 @@ class DatabaseService {
 
 extension DiscountsDb on DatabaseService {
   static Future<void> insert(Iterable<Discount> discounts) async {
-    final db = await DatabaseService._databaseService.database;
-    String values = discounts
-        .map((d) => "('${d.messageId}','${d.name}',${d.value})")
-        .join(",");
-    await db.rawInsert(
-        'INSERT INTO discounts(messageId, name, value) VALUES $values');
+    if (discounts.isNotEmpty) {
+      final db = await DatabaseService._databaseService.database;
+      String values = discounts
+          .map((d) => "('${d.messageId}','${d.name}',${d.value})")
+          .join(",");
+      await db.rawInsert(
+          'INSERT INTO discounts(messageId, name, value) VALUES $values');
+    }
   }
 
   static Future<List<Discount>> getByMessageId(String messageId) async {
@@ -90,13 +92,15 @@ extension ExpensesDb on DatabaseService {
   }
 
   static Future<void> insert(Iterable<Expense> expenses) async {
-    final db = await DatabaseService._databaseService.database;
-    String values = expenses
-        .map((e) =>
-            "('${e.messageId}','${e.name}',${e.quantity},${e.price},${e.total()},${e.discount},'${e.unit.name}')")
-        .join(",");
-    await db.rawInsert(
-        'INSERT INTO expenses(messageId, name, quantity, price, total, discount, unit) VALUES $values');
+    if (expenses.isNotEmpty) {
+      final db = await DatabaseService._databaseService.database;
+      String values = expenses
+          .map((e) =>
+              "('${e.messageId}','${e.name}',${e.quantity},${e.price},${e.total()},${e.discount},'${e.unit.name}')")
+          .join(",");
+      await db.rawInsert(
+          'INSERT INTO expenses(messageId, name, quantity, price, total, discount, unit) VALUES $values');
+    }
   }
 
   static Future<List<Expense>> all() async {
@@ -156,12 +160,14 @@ extension AttachmentsDb on DatabaseService {
   }
 
   static Future<void> insert(Iterable<Attachment> attachments) async {
-    final db = await DatabaseService._databaseService.database;
-    String values = attachments
-        .map((a) => "('${a.id}',${a.timestamp},'${a.content}','${a.total}')")
-        .join(",");
-    await db.rawInsert(
-        'INSERT INTO receipts (id, timestamp, content, total) VALUES $values');
+    if (attachments.isNotEmpty) {
+      final db = await DatabaseService._databaseService.database;
+      String values = attachments
+          .map((a) => "('${a.id}',${a.timestamp},'${a.content}','${a.total}')")
+          .join(",");
+      await db.rawInsert(
+          'INSERT INTO receipts (id, timestamp, content, total) VALUES $values');
+    }
   }
 
   static Future<void> delete(String id) async {
