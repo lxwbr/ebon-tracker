@@ -1,6 +1,6 @@
-import 'dart:convert';
-
 import 'package:dartz/dartz.dart' hide State;
+import 'package:ebon_tracker/application/gmail.dart';
+import 'package:ebon_tracker/application/helpers.dart';
 import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
@@ -9,15 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../application/database_service.dart';
-import '../data/attachment.dart';
+import '../data/pdf.dart';
 import '../data/receipt.dart';
 import '../redux/attachments/attachments_actions.dart';
-import '../redux/attachments/attachments_state.dart';
+import '../redux/main/main_actions.dart';
 import 'errors.dart';
 import 'expenses.dart';
-
-DatabaseService _databaseService = DatabaseService();
 
 class Main extends StatefulWidget {
   const Main({super.key, required this.account});
@@ -43,54 +40,20 @@ class _MainState extends State<Main> {
       const ExpensesPage()
     ];
 
-    return StoreConnector<AppState, AttachmentsState>(
+    return StoreConnector<AppState, AppState>(
         distinct: true,
-        converter: (store) => store.state.attachmentsState,
+        converter: (store) => store.state,
         builder: (context, state) {
           return Scaffold(
-            appBar: AppBar(
-                actions: [
-                  IconButton(
-                      onPressed: () async {
-                        List<Either<FailedReceipt, Receipt>> result =
-                            await insertReceipts(state.attachments);
-                        List<FailedReceipt> errors = result.lefts();
-
-                        if (errors.isNotEmpty) {
-                          if (!mounted) return;
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => ErrorsPage(errors: errors)));
-                        }
-                      },
-                      icon: const Icon(Icons.scanner)),
-                  IconButton(
-                      onPressed: () async {
-                        if (state.attachments.isNotEmpty) {
-                          int latest = state.attachments
-                              .reduce((value, element) =>
-                                  element.timestamp > value.timestamp
-                                      ? element
-                                      : value)
-                              .timestamp;
-
-                          fetchAttachmentsAction(Redux.store, latest);
-                        } else {
-                          fetchAttachmentsAction(Redux.store, null);
-                        }
-                      },
-                      icon: const Icon(Icons.refresh))
-                ],
-                bottom: (() {
-                  if (state.loading) {
-                    return const PreferredSize(
-                        preferredSize: Size.fromHeight(6.0),
-                        child: LinearProgressIndicator(
-                          semanticsLabel: 'Linear progress indicator',
-                        ));
-                  }
-                })()),
+            appBar: AppBar(bottom: (() {
+              return PreferredSize(
+                  preferredSize: Size.fromHeight(6.0),
+                  child: LinearProgressIndicator(
+                    value: state.mainState.loading == double.infinity
+                        ? null
+                        : state.mainState.loading,
+                  ));
+            })()),
             drawer: Drawer(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -118,7 +81,7 @@ class _MainState extends State<Main> {
                     leading: const Icon(Icons.delete),
                     title: const Text('Clear expenses table'),
                     onTap: () async {
-                      await _databaseService.deleteExpenses();
+                      await deleteExpensesAction();
                     },
                   ),
                   ListTile(

@@ -7,8 +7,6 @@ import '../data/expense.dart';
 import '../redux/attachments/attachments_state.dart';
 import 'attachment.dart';
 
-DatabaseService _databaseService = DatabaseService();
-
 class ExpensesPage extends StatefulWidget {
   const ExpensesPage({super.key});
 
@@ -22,7 +20,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _databaseService.expenses().then((expenses) => setState(() {
+      ExpensesDb.all().then((expenses) => setState(() {
             _expenses = expenses;
           }));
     });

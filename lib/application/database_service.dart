@@ -1,9 +1,11 @@
+import 'package:dartz/dartz.dart';
 import 'package:ebon_tracker/data/attachment.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../data/discount.dart';
 import '../data/expense.dart';
+import '../data/receipt.dart';
 
 class DatabaseService {
   // Singleton pattern
@@ -52,166 +54,129 @@ class DatabaseService {
       'CREATE TABLE expenses(messageId VARCHAR, name VARCHAR, price REAL, quantity REAL, unit VARCHAR, discount REAL, total REAL, FOREIGN KEY(messageId) REFERENCES receipts(id))',
     );
   }
+}
 
-  // Define a function that inserts attachments into the database
-  Future<void> insertExpense(String messageId, Expense expense) async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
-    await db.insert(
-      'expenses',
-      expense.toMap(messageId),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  // Define a function that inserts attachments into the database
-  Future<void> insertExpenses(String messageId, List<Expense> expenses) async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
-
-    String values = expenses
-        .map((e) =>
-            "('${e.messageId}','${e.name}',${e.quantity},${e.price},${e.total()},${e.discount},'${e.unit}')")
+extension DiscountsDb on DatabaseService {
+  static Future<void> insert(Iterable<Discount> discounts) async {
+    final db = await DatabaseService._databaseService.database;
+    String values = discounts
+        .map((d) => "('${d.messageId}','${d.name}',${d.value})")
         .join(",");
-
-    // Insert the Breed into the correct table. You might also specify the
-    // `conflictAlgorithm` to use in case the same breed is inserted twice.
-    //
-    // In this case, replace any previous data.
-    await db.rawInsert(
-        'INSERT INTO expenses(messageId, name, quantity, price, total, discount, unit) VALUES $values');
-  }
-
-  Future<List<Expense>> expenses() async {
-    final db = await _databaseService.database;
-    final List<Map<String, dynamic>> maps =
-        await db.query('expenses', orderBy: "name");
-    return maps.map((e) => Expense.fromMap(e)).toList();
-  }
-
-  Future<List<Expense>> expensesByName(String name) async {
-    final db = await _databaseService.database;
-    final List<Map<String, dynamic>> maps =
-        await db.query('expenses', where: 'name = ?', whereArgs: [name]);
-    return maps.map((e) => Expense.fromMap(e)).toList();
-  }
-
-  Future<List<Expense>> expensesByMessageId(String messageId) async {
-    final db = await _databaseService.database;
-    final List<Map<String, dynamic>> maps = await db
-        .query('expenses', where: 'messageId = ?', whereArgs: [messageId]);
-    return maps.map((e) => Expense.fromMap(e)).toList();
-  }
-
-  Future<void> insertDiscounts(
-      String messageId, List<Discount> discounts) async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
-
-    String values =
-        discounts.map((d) => "('$messageId','${d.name}',${d.value})").join(",");
-
-    // Insert the Breed into the correct table. You might also specify the
-    // `conflictAlgorithm` to use in case the same breed is inserted twice.
-    //
-    // In this case, replace any previous data.
     await db.rawInsert(
         'INSERT INTO discounts(messageId, name, value) VALUES $values');
   }
 
-  Future<List<Discount>> discounts(String messageId) async {
-    final db = await _databaseService.database;
+  static Future<List<Discount>> getByMessageId(String messageId) async {
+    final db = await DatabaseService._databaseService.database;
     final List<Map<String, dynamic>> maps = await db
         .query('discounts', where: 'messageId = ?', whereArgs: [messageId]);
     return maps.map((e) => Discount.fromMap(e)).toList();
   }
 
-  // Define a function that inserts attachments into the database
-  Future<void> insertAttachment(Attachment attachment) async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
+  static Future<void> purge() async {
+    final db = await DatabaseService._databaseService.database;
+    await db.delete(
+      'discounts',
+    );
+  }
+}
 
-    // Insert the Breed into the correct table. You might also specify the
-    // `conflictAlgorithm` to use in case the same breed is inserted twice.
-    //
-    // In this case, replace any previous data.
-    await db.insert(
-      'receipts',
-      attachment.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.fail,
+extension ExpensesDb on DatabaseService {
+  static Future<void> purge() async {
+    final db = await DatabaseService._databaseService.database;
+    await db.delete(
+      'expenses',
     );
   }
 
-  Future<void> updateAttachment(Attachment attachment) async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
-
-    // Insert the Breed into the correct table. You might also specify the
-    // `conflictAlgorithm` to use in case the same breed is inserted twice.
-    //
-    // In this case, replace any previous data.
-    await db.update('receipts', attachment.toMap(),
-        where: 'id = ?', whereArgs: [attachment.id]);
+  static Future<void> insert(Iterable<Expense> expenses) async {
+    final db = await DatabaseService._databaseService.database;
+    String values = expenses
+        .map((e) =>
+            "('${e.messageId}','${e.name}',${e.quantity},${e.price},${e.total()},${e.discount},'${e.unit.name}')")
+        .join(",");
+    await db.rawInsert(
+        'INSERT INTO expenses(messageId, name, quantity, price, total, discount, unit) VALUES $values');
   }
 
-  // A method that retrieves all the attachments from the breeds table.
-  Future<List<Attachment>> attachments() async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
+  static Future<List<Expense>> all() async {
+    final db = await DatabaseService._databaseService.database;
+    final List<Map<String, dynamic>> maps =
+        await db.query('expenses', orderBy: "name");
+    return maps.map((e) => Expense.fromMap(e)).toList();
+  }
 
-    // Query the table for all the attachments.
+  static Future<List<Expense>> getByName(String name) async {
+    final db = await DatabaseService._databaseService.database;
+    final List<Map<String, dynamic>> maps =
+        await db.query('expenses', where: 'name = ?', whereArgs: [name]);
+    return maps.map((e) => Expense.fromMap(e)).toList();
+  }
+
+  static Future<List<Expense>> getByMessageId(String messageId) async {
+    final db = await DatabaseService._databaseService.database;
+    final List<Map<String, dynamic>> maps = await db
+        .query('expenses', where: 'messageId = ?', whereArgs: [messageId]);
+    return maps.map((e) => Expense.fromMap(e)).toList();
+  }
+}
+
+extension ReceiptsDb on DatabaseService {
+  static Future<Receipt?> get(String id) async {
+    Attachment? attachment = await AttachmentsDb.get(id);
+    if (attachment != null) {
+      List<Expense> expenses = await ExpensesDb.getByMessageId(id);
+      List<Discount> discounts = await DiscountsDb.getByMessageId(id);
+      return Receipt(
+          attachment: attachment, expenses: expenses, discounts: discounts);
+    } else {
+      return null;
+    }
+  }
+}
+
+extension AttachmentsDb on DatabaseService {
+  static Future<List<Attachment>> all() async {
+    final db = await DatabaseService._databaseService.database;
     final List<Map<String, dynamic>> maps =
         await db.query('receipts', orderBy: 'timestamp DESC');
-
-    // Convert the List<Map<String, dynamic> into a List<Attachment>.
     return List.generate(
         maps.length, (index) => Attachment.fromMap(maps[index]));
   }
 
-  Future<Attachment?> attachment(String id) async {
-    final db = await _databaseService.database;
+  static Future<Attachment?> get(String id) async {
+    final db = await DatabaseService._databaseService.database;
     final List<Map<String, dynamic>> maps =
         await db.query('receipts', where: 'id = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
-      return Attachment.fromMap(maps[0]);
+      return Attachment.fromMap(maps.first);
     } else {
       return null;
     }
   }
 
-  // A method that deletes a breed data from the attachments table.
-  Future<void> deleteAttachment(String id) async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
+  static Future<void> insert(Iterable<Attachment> attachments) async {
+    final db = await DatabaseService._databaseService.database;
+    String values = attachments
+        .map((a) => "('${a.id}',${a.timestamp},'${a.content}','${a.total}')")
+        .join(",");
+    await db.rawInsert(
+        'INSERT INTO receipts (id, timestamp, content, total) VALUES $values');
+  }
 
-    // Remove the Breed from the database.
+  static Future<void> delete(String id) async {
+    final db = await DatabaseService._databaseService.database;
     await db.delete(
       'receipts',
-      // Use a `where` clause to delete a specific breed.
       where: 'id = ?',
-      // Pass the Breed's id as a whereArg to prevent SQL injection.
       whereArgs: [id],
     );
   }
 
-  // A method that deletes a breed data from the attachments table.
-  Future<void> deleteAttachments() async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
-
-    // Remove the Breed from the database.
+  static Future<void> purge() async {
+    final db = await DatabaseService._databaseService.database;
     await db.delete(
       'receipts',
-    );
-  }
-
-  Future<void> deleteExpenses() async {
-    // Get a reference to the database.
-    final db = await _databaseService.database;
-
-    // Remove the Breed from the database.
-    await db.delete(
-      'expenses',
     );
   }
 }

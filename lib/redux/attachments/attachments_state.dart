@@ -4,15 +4,12 @@ import 'package:meta/meta.dart';
 @immutable
 class AttachmentsState {
   final List<Attachment> attachments;
-  final bool loading;
 
-  const AttachmentsState({required this.attachments, required this.loading});
+  const AttachmentsState({required this.attachments});
 
-  factory AttachmentsState.initial() =>
-      const AttachmentsState(attachments: [], loading: false);
+  factory AttachmentsState.initial() => const AttachmentsState(attachments: []);
 
-  AttachmentsState copyWith(
-      {required List<Attachment> attachments, required bool loading}) {
-    return AttachmentsState(attachments: attachments, loading: loading);
+  AttachmentsState copyWith({required List<Attachment> attachments}) {
+    return AttachmentsState(attachments: attachments);
   }
 }

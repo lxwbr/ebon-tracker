@@ -7,8 +7,6 @@ import '../data/attachment.dart';
 import '../data/expense.dart';
 import 'expense.dart';
 
-DatabaseService _databaseService = DatabaseService();
-
 class ReceiptPage extends StatelessWidget {
   const ReceiptPage({super.key, required this.expenses});
   final List<Expense> expenses;
@@ -36,14 +34,14 @@ class ReceiptPage extends StatelessWidget {
                     .map((expense) => DataRow(
                             onSelectChanged: ((selected) async {
                               if (selected != null && selected) {
-                                var expenses = await _databaseService
-                                    .expensesByName(expense.name);
+                                var expenses =
+                                    await ExpensesDb.getByName(expense.name);
                                 List<Tuple2<Expense, Attachment>> tuple =
                                     await Future.wait(expenses.map((e) async =>
                                         Tuple2<Expense, Attachment>(
                                             e,
-                                            (await _databaseService
-                                                .attachment(e.messageId))!)));
+                                            (await AttachmentsDb.get(
+                                                e.messageId))!)));
 
                                 if (!mounted) return;
                                 Navigator.push(

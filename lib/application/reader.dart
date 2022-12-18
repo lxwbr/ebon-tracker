@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart' hide Unit;
+import 'package:ebon_tracker/application/helpers.dart';
+import 'package:collection/collection.dart';
 
 import '../data/attachment.dart';
 import '../data/discount.dart';
 import '../data/expense.dart';
+import '../data/pdf.dart';
 import '../data/quantity.dart';
 import '../data/receipt.dart';
 import '../data/unit.dart';
@@ -86,8 +89,8 @@ class NamedValue {
   const NamedValue({required this.name, required this.value});
 }
 
-Either<String, Receipt> consume(Attachment attachment, List<String> lines,
-    List<Expense> expenses, List<Discount> discounts,
+Either<FailedReceipt, Receipt> consume(double total, Attachment attachment,
+    List<String> lines, List<Expense> expenses, List<Discount> discounts,
     [Quantity? quantity]) {
   if (lines.isEmpty) {
     return Right(Receipt(
@@ -113,18 +116,18 @@ Either<String, Receipt> consume(Attachment attachment, List<String> lines,
             quantity ??
                 Quantity(n: 1, price: namedValue.value, unit: Unit.none)));
       });
-      return consume(attachment, lines, expenses, discounts);
+      return consume(total, attachment, lines, expenses, discounts);
     } else {
-      return consume(
-          attachment, lines, expenses, discounts, parseQuantity(sanitized));
+      return consume(total, attachment, lines, expenses, discounts,
+          parseQuantity(sanitized));
     }
   } catch (ex) {
-    return Left(ex.toString());
+    return Left(FailedReceipt(attachment: attachment, error: ex.toString()));
   }
 }
 
-Future<Receipt> read(Attachment attachment) async {
-  PdfDocument document = PdfDocument.fromBase64String(attachment.content);
+Either<FailedReceipt, Receipt> read(Pdf pdf) {
+  PdfDocument document = PdfDocument.fromBase64String(pdf.content);
   //Create a new instance of the PdfTextExtractor.
   PdfTextExtractor extractor = PdfTextExtractor(document);
 
@@ -142,68 +145,35 @@ Future<Receipt> read(Attachment attachment) async {
   List<String> lines =
       textLines.sublist(first + 1, last).map((e) => e.text).toList();
 
-  attachment = attachment.withTotal(total);
+  Attachment attachment = Attachment(
+      id: pdf.id, timestamp: pdf.timestamp, content: pdf.content, total: total);
 
-  return consume(attachment, lines, [], [])
-      .fold((l) => Future.error(l), (r) => r);
+  return consume(total, attachment, lines, [], []);
 }
 
-DatabaseService _databaseService = DatabaseService();
+typedef EitherReceipt = Either<FailedReceipt, Receipt>;
 
-extension ListEitherExtension<L, R> on List<Either<L, R>> {
-  List<R> rights() => where((e) => e.isRight())
-      .map((e) => e.getOrElse(() => throw UnimplementedError()))
-      .toList();
+Future<Iterable<EitherReceipt>> insertReceipts(Iterable<Pdf> pdfs) async {
+  Iterable<Either<FailedReceipt, Receipt>> readResult = pdfs.map(read);
 
-  List<L> lefts() => where((e) => e.isLeft())
-      .map((e) => e.swap().getOrElse(() => throw UnimplementedError()))
-      .toList();
-}
+  Iterable<Receipt> receipts = readResult.rights();
 
-Future<Receipt> insertReceipt(Attachment attachment) async {
-  // Check if there expenses for this attachment has been scanned in the past
-  Attachment? existing = await _databaseService.attachment(attachment.id);
+  if (receipts.isNotEmpty) {
+    await AttachmentsDb.insert(receipts.map((e) => e.attachment));
+    await ExpensesDb.insert(receipts.map((e) => e.expenses).flattened);
+    await DiscountsDb.insert(receipts.map((e) => e.discounts).flattened);
+    Iterable<Attachment> unchanged =
+        Redux.store.state.attachmentsState.attachments.where((element) =>
+            receipts.where((r) => r.attachment.id == element.id).isEmpty);
+    List<Attachment> attachments = [
+      ...unchanged,
+      ...receipts.map((e) => e.attachment)
+    ];
+    attachments.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-  List<Expense> expenses =
-      await _databaseService.expensesByMessageId(attachment.id);
-
-  if (expenses.isEmpty || existing == null) {
-    Receipt receipt = await read(attachment);
-
-    if (existing == null) {
-      await _databaseService.insertAttachment(receipt.attachment);
-    } else if (existing.total.isNone()) {
-      await _databaseService.updateAttachment(receipt.attachment);
-    }
-    await _databaseService.insertExpenses(
-        receipt.attachment.id, receipt.expenses);
-
-    if (receipt.discounts.isNotEmpty) {
-      await _databaseService.insertDiscounts(
-          receipt.attachment.id, receipt.discounts);
-    }
-
-    Redux.store.dispatch(SetAttachmentsStateAction(AttachmentsState(
-        attachments: Redux.store.state.attachmentsState.attachments
-            .map((a) => a.id == receipt.attachment.id ? receipt.attachment : a)
-            .toList(),
-        loading: false)));
-
-    return receipt;
-  } else {
-    List<Discount> discounts = await _databaseService.discounts(existing.id);
-    return Receipt(
-        attachment: existing, expenses: expenses, discounts: discounts);
+    Redux.store.dispatch(
+        SetAttachmentsStateAction(AttachmentsState(attachments: attachments)));
   }
-}
 
-Future<List<Either<FailedReceipt, Receipt>>> insertReceipts(
-    List<Attachment> attachments) async {
-  return await Future.wait(attachments.map((attachment) async {
-    try {
-      return Right(await insertReceipt(attachment));
-    } catch (err) {
-      return Left(FailedReceipt(attachment: attachment, error: err.toString()));
-    }
-  }));
+  return readResult;
 }

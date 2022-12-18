@@ -1,4 +1,4 @@
-import 'package:ebon_tracker/application/reader.dart';
+import 'package:ebon_tracker/application/database_service.dart';
 import 'package:ebon_tracker/data/attachment.dart';
 import 'package:ebon_tracker/widgets/receipt.dart';
 import 'package:flutter/material.dart';
@@ -23,13 +23,15 @@ class AttachmentPage extends StatelessWidget {
           IconButton(
               onPressed: () async {
                 try {
-                  Receipt receipt = await insertReceipt(attachment);
-                  if (!mounted) return;
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) =>
-                              ReceiptPage(expenses: receipt.expenses)));
+                  Receipt? receipt = await ReceiptsDb.get(attachment.id);
+                  if (receipt != null) {
+                    if (!mounted) return;
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                ReceiptPage(expenses: receipt.expenses)));
+                  }
                 } catch (ex) {
                   Navigator.push(
                       context,

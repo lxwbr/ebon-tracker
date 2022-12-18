@@ -51,14 +51,14 @@ class Expense {
     return "$name: $price$q$d$t";
   }
 
-  Map<String, dynamic> toMap(String messageId) => {
+  Map<String, dynamic> toMap() => {
         'messageId': messageId,
         'name': name,
         'quantity': quantity,
         'price': price,
         'total': total(),
         'discount': discount,
-        'unit': unit.toString()
+        'unit': unit.name
       };
 
   factory Expense.fromMap(Map<String, dynamic> map) => Expense(
