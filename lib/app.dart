@@ -1,30 +1,22 @@
-import 'package:dartz/dartz.dart' hide State;
-import 'package:ebon_tracker/application/gmail.dart';
-import 'package:ebon_tracker/application/helpers.dart';
-import 'package:ebon_tracker/application/reader.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
+import 'package:ebon_tracker/widgets/expenses.dart';
 import 'package:ebon_tracker/widgets/receipts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../data/pdf.dart';
-import '../data/receipt.dart';
 import '../redux/attachments/attachments_actions.dart';
-import '../redux/main/main_actions.dart';
-import 'errors.dart';
-import 'expenses.dart';
 
-class Main extends StatefulWidget {
-  const Main({super.key, required this.account});
+class App extends StatefulWidget {
+  const App({super.key, required this.account});
   final GoogleSignInAccount account;
 
   @override
-  State<Main> createState() => _MainState();
+  State<App> createState() => _AppState();
 }
 
-class _MainState extends State<Main> {
+class _AppState extends State<App> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
@@ -47,7 +39,7 @@ class _MainState extends State<Main> {
           return Scaffold(
             appBar: AppBar(bottom: (() {
               return PreferredSize(
-                  preferredSize: Size.fromHeight(6.0),
+                  preferredSize: const Size.fromHeight(6.0),
                   child: LinearProgressIndicator(
                     value: state.mainState.loading == double.infinity
                         ? null

@@ -15,6 +15,23 @@ class SetUserAccountStateAction {
   const SetUserAccountStateAction(this.userState);
 }
 
+Future<void> silentSignInAction(Store<AppState> store) async {
+  store.dispatch(const SetUserAccountStateAction(UserState(signingIn: true)));
+
+  try {
+    GoogleSignInAccount? account = await _googleSignIn.signInSilently();
+
+    store.dispatch(
+      SetUserAccountStateAction(
+        UserState(account: account),
+      ),
+    );
+  } catch (error) {
+    store
+        .dispatch(const SetUserAccountStateAction(UserState(signingIn: false)));
+  }
+}
+
 Future<void> signInAction(Store<AppState> store) async {
   store.dispatch(const SetUserAccountStateAction(UserState(signingIn: true)));
 
