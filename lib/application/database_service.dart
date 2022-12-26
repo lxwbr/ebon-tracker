@@ -1,5 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:ebon_tracker/data/attachment.dart';
+import 'package:ebon_tracker/data/category.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -42,17 +42,44 @@ class DatabaseService {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await db.execute(
-      'CREATE TABLE receipts(id VARCHAR, timestamp TIMESTAMP, content BLOB, total REAL, PRIMARY KEY (id))',
-    );
+    await db.execute('CREATE TABLE receipts('
+        'id VARCHAR PRIMARY KEY,'
+        'timestamp TIMESTAMP,'
+        'content BLOB,'
+        'total REAL'
+        ')');
 
-    await db.execute(
-      'CREATE TABLE discounts(messageId VARCHAR, name VARCHAR, value REAL, FOREIGN KEY(messageId) REFERENCES receipts(id))',
-    );
+    await db.execute('CREATE TABLE discounts('
+        'messageId VARCHAR,'
+        'name VARCHAR,'
+        'value REAL,'
+        'FOREIGN KEY(messageId) REFERENCES receipts(id)'
+        ')');
 
-    await db.execute(
-      'CREATE TABLE expenses(messageId VARCHAR, name VARCHAR, price REAL, quantity REAL, unit VARCHAR, discount REAL, total REAL, FOREIGN KEY(messageId) REFERENCES receipts(id))',
-    );
+    await db.execute('CREATE TABLE expenses('
+        'messageId VARCHAR,'
+        'name VARCHAR,'
+        'price REAL,'
+        'quantity REAL,'
+        'unit VARCHAR,'
+        'discount REAL,'
+        'total REAL,'
+        'category INTEGER,'
+        'FOREIGN KEY(messageId) REFERENCES receipts(id),'
+        'FOREIGN KEY(category) REFERENCES categories(id)'
+        ')');
+
+    await db.execute('CREATE TABLE categories('
+        'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+        'name VARCHAR,'
+        'parentId INTEGER,'
+        'FOREIGN KEY(parentId) REFERENCES categories(id)'
+        ')');
+  }
+
+  static _purge(String table) async {
+    final db = await DatabaseService._databaseService.database;
+    await db.delete(table);
   }
 }
 
@@ -180,9 +207,26 @@ extension AttachmentsDb on DatabaseService {
   }
 
   static Future<void> purge() async {
+    return DatabaseService._purge('receipts');
+  }
+}
+
+extension CategoriesDb on DatabaseService {
+  static const String _tableName = 'categories';
+
+  static Future<List<Category>> all() async {
     final db = await DatabaseService._databaseService.database;
-    await db.delete(
-      'receipts',
-    );
+    final List<Map<String, dynamic>> maps =
+        await db.query(_tableName, orderBy: 'id ASC');
+    return List.generate(maps.length, (index) => Category.fromMap(maps[index]));
+  }
+
+  static Future<void> insert(String name, int? parent) async {
+    final db = await DatabaseService._databaseService.database;
+    db.insert(_tableName, {"name": name, "parentId": parent});
+  }
+
+  static Future<void> purge() async {
+    return DatabaseService._purge(_tableName);
   }
 }

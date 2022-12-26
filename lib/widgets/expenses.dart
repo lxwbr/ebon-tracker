@@ -1,3 +1,4 @@
+import 'package:ebon_tracker/main.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
@@ -47,6 +48,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                         ),
                       ],
                       rows: _expenses
+                          .unique((e) => e.name)
                           .map((expense) => DataRow(
                                   onSelectChanged: (selected) => {
                                         if (selected != null && selected)

@@ -1,5 +1,9 @@
+import 'package:ebon_tracker/application/database_service.dart';
+import 'package:ebon_tracker/data/category.dart';
+import 'package:ebon_tracker/redux/categories/categories_actions.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
+import 'package:ebon_tracker/widgets/categories.dart';
 import 'package:ebon_tracker/widgets/expenses.dart';
 import 'package:ebon_tracker/widgets/receipts.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +30,19 @@ class _AppState extends State<App> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    CategoriesDb.all().then((value) {
+      setCategories(value);
+    });
+  }
+
+  @override
   Widget build(BuildContext context, [bool mounted = true]) {
     List<Widget> screens = [
       ReceiptsPage(account: widget.account),
-      const ExpensesPage()
+      const ExpensesPage(),
+      const CategoriesPage()
     ];
 
     return StoreConnector<AppState, AppState>(
@@ -83,6 +96,14 @@ class _AppState extends State<App> {
                       signOutAction(Redux.store);
                     },
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.delete),
+                    title: const Text('Clear categories table'),
+                    onTap: () async {
+                      await CategoriesDb.purge();
+                      setCategories([]);
+                    },
+                  ),
                 ],
               ),
             ),
@@ -99,6 +120,10 @@ class _AppState extends State<App> {
                   BottomNavigationBarItem(
                     icon: Icon(Icons.local_grocery_store),
                     label: 'Expenses',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.label),
+                    label: 'Categories',
                   ),
                 ],
                 currentIndex: _selectedIndex,

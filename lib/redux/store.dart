@@ -1,4 +1,6 @@
 import 'package:ebon_tracker/redux/attachments/attachments_actions.dart';
+import 'package:ebon_tracker/redux/categories/categories_actions.dart';
+import 'package:ebon_tracker/redux/categories/categories_state.dart';
 import 'package:ebon_tracker/redux/main/main_actions.dart';
 import 'package:ebon_tracker/redux/main/main_reducer.dart';
 import 'package:ebon_tracker/redux/main/main_state.dart';
@@ -8,6 +10,7 @@ import 'package:redux/redux.dart';
 
 import 'attachments/attachments_reducer.dart';
 import 'attachments/attachments_state.dart';
+import 'categories/categories_reducer.dart';
 import 'user/user_actions.dart';
 import 'user/user_reducer.dart';
 
@@ -17,7 +20,8 @@ AppState appReducer(AppState state, dynamic action) {
     return state.copyWith(
         mainState: state.mainState,
         userState: nextPostsState,
-        attachmentsState: state.attachmentsState);
+        attachmentsState: state.attachmentsState,
+        categoriesState: state.categoriesState);
   }
 
   if (action is SetAttachmentsStateAction) {
@@ -25,7 +29,8 @@ AppState appReducer(AppState state, dynamic action) {
     return state.copyWith(
         mainState: state.mainState,
         attachmentsState: nextPostsState,
-        userState: state.userState);
+        userState: state.userState,
+        categoriesState: state.categoriesState);
   }
 
   if (action is SetMainStateAction) {
@@ -33,7 +38,17 @@ AppState appReducer(AppState state, dynamic action) {
     return state.copyWith(
         mainState: nextMainState,
         userState: state.userState,
-        attachmentsState: state.attachmentsState);
+        attachmentsState: state.attachmentsState,
+        categoriesState: state.categoriesState);
+  }
+
+  if (action is CategoriesStateAction) {
+    final nextMainState = categoriesReducer(state.categoriesState, action);
+    return state.copyWith(
+        mainState: state.mainState,
+        userState: state.userState,
+        attachmentsState: state.attachmentsState,
+        categoriesState: nextMainState);
   }
 
   return state;
@@ -41,6 +56,7 @@ AppState appReducer(AppState state, dynamic action) {
 
 @immutable
 class AppState {
+  final CategoriesState categoriesState;
   final UserState userState;
   final AttachmentsState attachmentsState;
   final MainState mainState;
@@ -48,17 +64,19 @@ class AppState {
   const AppState(
       {required this.userState,
       required this.attachmentsState,
-      required this.mainState});
+      required this.mainState,
+      required this.categoriesState});
 
   AppState copyWith(
       {required MainState mainState,
       required UserState userState,
-      required AttachmentsState attachmentsState}) {
+      required AttachmentsState attachmentsState,
+      required CategoriesState categoriesState}) {
     return AppState(
-      mainState: mainState,
-      userState: userState,
-      attachmentsState: attachmentsState,
-    );
+        mainState: mainState,
+        userState: userState,
+        attachmentsState: attachmentsState,
+        categoriesState: categoriesState);
   }
 }
 
@@ -77,13 +95,15 @@ class Redux {
     final userStateInitial = UserState.initial();
     final attachmentsStateInitial = AttachmentsState.initial();
     final mainStateInitial = MainState.initial();
+    final categoriesInitial = CategoriesState.initial();
 
     _store = Store<AppState>(
       appReducer,
       initialState: AppState(
           mainState: mainStateInitial,
           userState: userStateInitial,
-          attachmentsState: attachmentsStateInitial),
+          attachmentsState: attachmentsStateInitial,
+          categoriesState: categoriesInitial),
     );
   }
 }
