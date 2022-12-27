@@ -90,18 +90,18 @@ class _AppState extends State<App> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.logout),
-                    title: const Text('Sign out'),
-                    onTap: () async {
-                      signOutAction(Redux.store);
-                    },
-                  ),
-                  ListTile(
                     leading: const Icon(Icons.delete),
                     title: const Text('Clear categories table'),
                     onTap: () async {
                       await CategoriesDb.purge();
                       setCategories([]);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: const Text('Sign out'),
+                    onTap: () async {
+                      signOutAction(Redux.store);
                     },
                   ),
                 ],

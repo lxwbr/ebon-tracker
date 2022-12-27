@@ -50,21 +50,21 @@ class _ExpensesPageState extends State<ExpensesPage> {
                       rows: _expenses
                           .unique((e) => e.name)
                           .map((expense) => DataRow(
-                                  onSelectChanged: (selected) => {
-                                        if (selected != null && selected)
-                                          {
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (_) => AttachmentPage(
-                                                        attachment: state
-                                                            .attachments
-                                                            .firstWhere((element) =>
-                                                                element.id ==
-                                                                expense
-                                                                    .messageId))))
-                                          }
-                                      },
+                                  // onSelectChanged: (selected) => {
+                                  //       if (selected != null && selected)
+                                  //         {
+                                  //           Navigator.push(
+                                  //               context,
+                                  //               MaterialPageRoute(
+                                  //                   builder: (_) => AttachmentPage(
+                                  //                       attachment: state
+                                  //                           .attachments
+                                  //                           .firstWhere((element) =>
+                                  //                               element.id ==
+                                  //                               expense
+                                  //                                   .messageId))))
+                                  //         }
+                                  //     },
                                   cells: [
                                     DataCell(Text(expense.name)),
                                     DataCell(Text(expense.price.toString())),

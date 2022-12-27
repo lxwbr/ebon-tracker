@@ -1,5 +1,6 @@
 import 'package:ebon_tracker/application/database_service.dart';
 import 'package:ebon_tracker/data/attachment.dart';
+import 'package:ebon_tracker/data/category.dart';
 import 'package:ebon_tracker/widgets/receipt.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf_render/pdf_render_widgets.dart';
@@ -8,8 +9,10 @@ import '../data/receipt.dart';
 import 'errors.dart';
 
 class AttachmentPage extends StatelessWidget {
-  const AttachmentPage({super.key, required this.attachment});
+  const AttachmentPage(
+      {super.key, required this.attachment, required this.categories});
   final Attachment attachment;
+  final List<Category> categories;
 
   @override
   Widget build(BuildContext context, [bool mounted = true]) {
@@ -29,8 +32,10 @@ class AttachmentPage extends StatelessWidget {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) =>
-                                ReceiptPage(expenses: receipt.expenses)));
+                            builder: (_) => ReceiptPage(
+                                  expenses: receipt.expenses,
+                                  categories: categories,
+                                )));
                   }
                 } catch (ex) {
                   Navigator.push(

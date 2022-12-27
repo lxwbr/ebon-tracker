@@ -7,35 +7,27 @@ import '../redux/store.dart';
 import 'category.dart';
 
 class CategorySelectPage extends StatelessWidget {
-  const CategorySelectPage({super.key});
+  const CategorySelectPage(
+      {super.key,
+      required this.name,
+      required this.categories,
+      required this.category});
+  final String name;
+  final Category? category;
+  final List<Category> categories;
 
   @override
   Widget build(BuildContext context) {
-    return StoreConnector<AppState, CategoriesState>(
-        distinct: true,
-        converter: (store) => store.state.categoriesState,
-        builder: (context, state) {
-          return Scaffold(
-            body: Column(
-                children: state.categories
-                    .map((e) => ListTile(
-                          title: Text(e.name),
-                          onTap: () async {},
-                        ))
-                    .toList()),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => CategoryPage(
-                              categories: state.categories,
-                            )));
-              },
-              backgroundColor: Colors.green,
-              child: const Icon(Icons.add),
-            ),
-          );
-        });
+    return Scaffold(
+      body: Column(
+          children: categories
+              .map((e) => ListTile(
+                    title: Text(e.name),
+                    onTap: () async {
+                      print("update $name with category: $e");
+                    },
+                  ))
+              .toList()),
+    );
   }
 }

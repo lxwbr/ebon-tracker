@@ -1,3 +1,4 @@
+import 'package:ebon_tracker/data/category.dart';
 import 'package:ebon_tracker/data/quantity.dart';
 import 'package:ebon_tracker/data/unit.dart';
 
@@ -8,8 +9,9 @@ class Expense {
   final Unit unit;
   final double discount;
   final String messageId;
+  Category? category;
 
-  const Expense({
+  Expense({
     required this.name,
     // Raw price per unit without any discount.
     required this.price,
@@ -18,6 +20,7 @@ class Expense {
     required this.quantity,
     required this.unit,
     required this.messageId,
+    this.category,
   });
 
   double total() =>
@@ -61,12 +64,20 @@ class Expense {
         'unit': unit.name
       };
 
-  factory Expense.fromMap(Map<String, dynamic> map) => Expense(
+  factory Expense.fromMap(Map<String, dynamic> map) {
+    int? categoryId = map["categoryId"];
+    String? categoryName = map["categoryName"];
+    Category? category;
+    if (categoryId != null && categoryName != null) {
+      category = Category(id: categoryId, name: categoryName);
+    }
+    return Expense(
         messageId: map['messageId'] ?? '',
         name: map['name'] ?? '',
         price: map['price'] ?? 0.0,
         discount: map['discount'] ?? 0.0,
         quantity: map['quantity'] ?? 0.0,
         unit: Unit.values.byName(map['unit']),
-      );
+        category: category);
+  }
 }

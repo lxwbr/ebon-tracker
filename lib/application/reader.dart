@@ -8,6 +8,7 @@ import '../data/attachment.dart';
 import '../data/discount.dart';
 import '../data/expense.dart';
 import '../data/pdf.dart';
+import '../data/product.dart';
 import '../data/quantity.dart';
 import '../data/receipt.dart';
 import '../data/unit.dart';
@@ -160,7 +161,9 @@ Future<Iterable<EitherReceipt>> insertReceipts(Iterable<Pdf> pdfs) async {
 
   if (receipts.isNotEmpty) {
     await AttachmentsDb.insert(receipts.map((e) => e.attachment));
-    await ExpensesDb.insert(receipts.map((e) => e.expenses).flattened);
+    final expenses = receipts.map((e) => e.expenses).flattened;
+    await ProductsDb.insert(expenses.map((e) => Product(name: e.name)));
+    await ExpensesDb.insert(expenses);
     await DiscountsDb.insert(receipts.map((e) => e.discounts).flattened);
     Iterable<Attachment> unchanged =
         Redux.store.state.attachmentsState.attachments.where((element) =>

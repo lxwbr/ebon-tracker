@@ -1,5 +1,6 @@
 import 'package:ebon_tracker/data/attachment.dart';
 import 'package:ebon_tracker/data/category.dart';
+import 'package:ebon_tracker/data/product.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -66,6 +67,12 @@ class DatabaseService {
         'total REAL,'
         'category INTEGER,'
         'FOREIGN KEY(messageId) REFERENCES receipts(id),'
+        'FOREIGN KEY(name) REFERENCES products(name)'
+        ')');
+
+    await db.execute('CREATE TABLE products('
+        'name VARCHAR PRIMARY KEY,'
+        'category INTEGER,'
         'FOREIGN KEY(category) REFERENCES categories(id)'
         ')');
 
@@ -146,8 +153,21 @@ extension ExpensesDb on DatabaseService {
 
   static Future<List<Expense>> getByMessageId(String messageId) async {
     final db = await DatabaseService._databaseService.database;
-    final List<Map<String, dynamic>> maps = await db
-        .query('expenses', where: 'messageId = ?', whereArgs: [messageId]);
+    final List<Map<String, dynamic>> maps =
+        await db.rawQuery("SELECT expenses.name AS name, "
+            "expenses.price AS price, "
+            "expenses.quantity AS quantity, "
+            "expenses.unit AS unit, "
+            "expenses.discount AS discount, "
+            "expenses.messageId AS messageId, "
+            "categories.id AS categoryId, "
+            "categories.name AS categoryName "
+            "FROM expenses "
+            "JOIN products ON expenses.name = products.name "
+            "LEFT OUTER JOIN categories ON categories.id = products.category "
+            "WHERE messageId = '$messageId'");
+
+    print("SQL RESULT: $maps");
     return maps.map((e) => Expense.fromMap(e)).toList();
   }
 }
@@ -208,6 +228,37 @@ extension AttachmentsDb on DatabaseService {
 
   static Future<void> purge() async {
     return DatabaseService._purge('receipts');
+  }
+}
+
+extension ProductsDb on DatabaseService {
+  static const String _tableName = 'products';
+
+  static Future<List<Product>> all() async {
+    final db = await DatabaseService._databaseService.database;
+    final List<Map<String, dynamic>> maps =
+        await db.query(_tableName, orderBy: 'name ASC');
+    return List.generate(maps.length, (index) => Product.fromMap(maps[index]));
+  }
+
+  static Future<void> insert(Iterable<Product> products) async {
+    if (products.isNotEmpty) {
+      final db = await DatabaseService._databaseService.database;
+      String values =
+          products.map((d) => "('${d.name}',${d.category})").join(",");
+      await db.rawInsert(
+          'INSERT OR IGNORE INTO products(name, category) VALUES $values');
+    }
+  }
+
+  static Future<void> update(Product product) async {
+    final db = await DatabaseService._databaseService.database;
+    await db.update(_tableName, product.toMap(),
+        where: 'name = ?', whereArgs: [product.name]);
+  }
+
+  static Future<void> purge() async {
+    return DatabaseService._purge(_tableName);
   }
 }
 

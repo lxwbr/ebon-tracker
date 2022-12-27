@@ -24,13 +24,6 @@ class ErrorsPage extends StatelessWidget {
               .map((e) => ListTile(
                     title: Text(
                         "${timestampString(e.attachment.timestamp)}: ${e.error}"),
-                    onTap: () async {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  AttachmentPage(attachment: e.attachment)));
-                    },
                   ))
               .toList(),
         ));

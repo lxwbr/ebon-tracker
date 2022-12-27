@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:ebon_tracker/redux/categories/categories_state.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
@@ -18,16 +20,17 @@ class ReceiptsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context, [bool mounted = true]) {
-    return StoreConnector<AppState, AttachmentsState>(
+    return StoreConnector<AppState, Tuple2<AttachmentsState, CategoriesState>>(
         distinct: true,
-        converter: (store) => store.state.attachmentsState,
+        converter: (store) =>
+            Tuple2(store.state.attachmentsState, store.state.categoriesState),
         builder: (context, state) {
           return LayoutBuilder(
               builder: (context, constraints) => RefreshIndicator(
                   onRefresh: () async {
                     int? latest;
-                    if (state.attachments.isNotEmpty) {
-                      latest = state.attachments
+                    if (state.head.attachments.isNotEmpty) {
+                      latest = state.head.attachments
                           .reduce((value, element) =>
                               element.timestamp > value.timestamp
                                   ? element
@@ -65,7 +68,7 @@ class ReceiptsPage extends StatelessWidget {
                                   label: Text('EUR'),
                                 ),
                               ],
-                              rows: state.attachments
+                              rows: state.head.attachments
                                   .map((attachment) => DataRow(
                                           onSelectChanged: (selected) => {
                                                 if (selected != null &&
@@ -76,8 +79,12 @@ class ReceiptsPage extends StatelessWidget {
                                                         MaterialPageRoute(
                                                             builder: (_) =>
                                                                 AttachmentPage(
-                                                                    attachment:
-                                                                        attachment)))
+                                                                  attachment:
+                                                                      attachment,
+                                                                  categories: state
+                                                                      .tail
+                                                                      .categories,
+                                                                )))
                                                   }
                                               },
                                           cells: [
