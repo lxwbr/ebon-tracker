@@ -5,6 +5,7 @@ import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
 import 'package:ebon_tracker/widgets/categories.dart';
 import 'package:ebon_tracker/widgets/expenses.dart';
+import 'package:ebon_tracker/widgets/export.dart';
 import 'package:ebon_tracker/widgets/receipts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
@@ -95,6 +96,16 @@ class _AppState extends State<App> {
                     onTap: () async {
                       await CategoriesDb.purge();
                       setCategories([]);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.import_export),
+                    title: const Text('Export'),
+                    onTap: () async {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ExportPage()));
                     },
                   ),
                   ListTile(
