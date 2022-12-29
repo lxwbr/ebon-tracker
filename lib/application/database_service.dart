@@ -118,10 +118,12 @@ extension DiscountsDb on DatabaseService {
 }
 
 extension ExpensesDb on DatabaseService {
+  static const String _tableName = 'expenses';
+
   static Future<void> purge() async {
     final db = await DatabaseService._databaseService.database;
     await db.delete(
-      'expenses',
+      _tableName,
     );
   }
 
@@ -140,15 +142,38 @@ extension ExpensesDb on DatabaseService {
   static Future<List<Expense>> all() async {
     final db = await DatabaseService._databaseService.database;
     final List<Map<String, dynamic>> maps =
-        await db.query('expenses', orderBy: "name");
+        await db.query(_tableName, orderBy: "name");
     return maps.map((e) => Expense.fromMap(e)).toList();
   }
 
   static Future<List<Expense>> getByName(String name) async {
     final db = await DatabaseService._databaseService.database;
     final List<Map<String, dynamic>> maps =
-        await db.query('expenses', where: 'name = ?', whereArgs: [name]);
+        await db.query(_tableName, where: 'name = ?', whereArgs: [name]);
     return maps.map((e) => Expense.fromMap(e)).toList();
+  }
+
+  static Future<Iterable<Expense>> between(DateTime from, DateTime to) async {
+    final db = await DatabaseService._databaseService.database;
+    String query = "SELECT receipts.timestamp AS timestamp, "
+        "expenses.messageId AS messageId, "
+        "expenses.name AS name, "
+        "expenses.quantity AS quantity, "
+        "expenses.price AS price, "
+        "expenses.total AS total, "
+        "expenses.discount AS discount, "
+        "expenses.unit AS unit, "
+        "categories.id AS categoryId, "
+        "categories.name AS categoryName "
+        "FROM receipts "
+        "JOIN expenses ON receipts.id = expenses.messageId "
+        "JOIN products ON expenses.name = products.name "
+        "LEFT OUTER JOIN categories ON categories.id = products.category "
+        "WHERE receipts.timestamp BETWEEN ${(from.millisecondsSinceEpoch / 1000).toStringAsFixed(0)} AND ${(to.millisecondsSinceEpoch / 1000).toStringAsFixed(0)}";
+
+    print(query);
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query);
+    return maps.map((e) => Expense.fromMap(e));
   }
 
   static Future<List<Expense>> getByMessageId(String messageId) async {
@@ -166,8 +191,6 @@ extension ExpensesDb on DatabaseService {
             "JOIN products ON expenses.name = products.name "
             "LEFT OUTER JOIN categories ON categories.id = products.category "
             "WHERE messageId = '$messageId'");
-
-    print("SQL RESULT: $maps");
     return maps.map((e) => Expense.fromMap(e)).toList();
   }
 }

@@ -10,18 +10,19 @@ class Expense {
   final double discount;
   final String messageId;
   Category? category;
+  DateTime? timestamp;
 
-  Expense({
-    required this.name,
-    // Raw price per unit without any discount.
-    required this.price,
-    // Discount for this expense.
-    required this.discount,
-    required this.quantity,
-    required this.unit,
-    required this.messageId,
-    this.category,
-  });
+  Expense(
+      {required this.name,
+      // Raw price per unit without any discount.
+      required this.price,
+      // Discount for this expense.
+      required this.discount,
+      required this.quantity,
+      required this.unit,
+      required this.messageId,
+      this.category,
+      this.timestamp});
 
   double total() =>
       double.parse((price * quantity + discount).toStringAsFixed(2));
@@ -67,7 +68,12 @@ class Expense {
   factory Expense.fromMap(Map<String, dynamic> map) {
     int? categoryId = map["categoryId"];
     String? categoryName = map["categoryName"];
+    int? timestampInt = map["timestamp"];
     Category? category;
+    DateTime? timestamp;
+    if (timestampInt != null) {
+      timestamp = DateTime.fromMillisecondsSinceEpoch(timestampInt * 1000);
+    }
     if (categoryId != null && categoryName != null) {
       category = Category(id: categoryId, name: categoryName);
     }
@@ -78,6 +84,7 @@ class Expense {
         discount: map['discount'] ?? 0.0,
         quantity: map['quantity'] ?? 0.0,
         unit: Unit.values.byName(map['unit']),
-        category: category);
+        category: category,
+        timestamp: timestamp);
   }
 }

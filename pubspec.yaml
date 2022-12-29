@@ -44,6 +44,8 @@ dependencies:
   path_provider: ^2.0.11
   dartz: ^0.10.1
   syncfusion_flutter_pdf: ^20.3.61
+  csv: ^5.0.1
+  share_plus: ^6.3.0
 
 dev_dependencies:
   flutter_test:
