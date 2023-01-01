@@ -170,8 +170,6 @@ extension ExpensesDb on DatabaseService {
         "JOIN products ON expenses.name = products.name "
         "LEFT OUTER JOIN categories ON categories.id = products.category "
         "WHERE receipts.timestamp BETWEEN ${(from.millisecondsSinceEpoch / 1000).toStringAsFixed(0)} AND ${(to.millisecondsSinceEpoch / 1000).toStringAsFixed(0)}";
-
-    print(query);
     final List<Map<String, dynamic>> maps = await db.rawQuery(query);
     return maps.map((e) => Expense.fromMap(e));
   }
@@ -259,8 +257,13 @@ extension ProductsDb on DatabaseService {
 
   static Future<List<Product>> all() async {
     final db = await DatabaseService._databaseService.database;
-    final List<Map<String, dynamic>> maps =
-        await db.query(_tableName, orderBy: 'name ASC');
+    String query = "SELECT products.name AS name, "
+        "categories.id AS categoryId, "
+        "categories.name AS categoryName "
+        "FROM products "
+        "LEFT OUTER JOIN categories ON categories.id = products.category "
+        "ORDER BY name ASC";
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query);
     return List.generate(maps.length, (index) => Product.fromMap(maps[index]));
   }
 
@@ -268,7 +271,7 @@ extension ProductsDb on DatabaseService {
     if (products.isNotEmpty) {
       final db = await DatabaseService._databaseService.database;
       String values =
-          products.map((d) => "('${d.name}',${d.category})").join(",");
+          products.map((d) => "('${d.name}',${d.category?.id})").join(",");
       await db.rawInsert(
           'INSERT OR IGNORE INTO products(name, category) VALUES $values');
     }

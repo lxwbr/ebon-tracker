@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'package:csv/csv.dart';
+import 'package:ebon_tracker/data/category.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/expense.dart';
+import '../data/product.dart';
 import '../data/subsembly.dart';
 import 'database_service.dart';
 
@@ -13,7 +15,17 @@ String _twoDigits(int n) {
   return "0$n";
 }
 
-Future<void> export(DateTime from, DateTime to) async {
+Future<void> _store(String name, List<List<String>> rows) async {
+  String csv = const ListToCsvConverter().convert(rows);
+  final directory = await getTemporaryDirectory();
+  final file = File('${directory.path}/$name.csv');
+  file.writeAsStringSync(csv);
+  XFile xFile = XFile(file.path);
+  await Share.shareXFiles([xFile]);
+  file.deleteSync();
+}
+
+Future<void> exportExpenses(DateTime from, DateTime to) async {
   Iterable<Expense> expenses = await ExpensesDb.between(from, to);
   Iterable<Subsembly> converted = expenses.map((expense) {
     String cdtDbtInd = expense.total() > .0 ? "DBIT" : "CRDT";
@@ -36,11 +48,16 @@ Future<void> export(DateTime from, DateTime to) async {
 
   var rows = converted.map((e) => e.toCsv);
 
-  String csv = const ListToCsvConverter().convert([Subsembly.headers, ...rows]);
-  final directory = await getTemporaryDirectory();
-  final file = File('${directory.path}/subsembly.csv');
-  file.writeAsStringSync(csv);
-  XFile xFile = XFile(file.path);
-  await Share.shareXFiles([xFile]);
-  file.deleteSync();
+  await _store("subsembly", [Subsembly.headers, ...rows]);
+}
+
+Future<void> exportCategories(List<Category> categories) async {
+  Iterable<List<String>> rows = categories.map((category) => category.toCsv);
+  await _store("categories", [Category.headers, ...rows]);
+}
+
+Future<void> exportProducts() async {
+  List<Product> products = await ProductsDb.all();
+  Iterable<List<String>> rows = products.map((product) => product.toCsv);
+  await _store("products", [Product.headers, ...rows]);
 }

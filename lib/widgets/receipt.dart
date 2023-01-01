@@ -90,13 +90,14 @@ class ReceiptPageState extends State<ReceiptPage> {
                                               MainAxisAlignment.start,
                                           mainAxisSize: MainAxisSize.max,
                                           children: widget.categories
-                                              .map((e) => ListTile(
-                                                  title: Text(e.name),
+                                              .map((category) => ListTile(
+                                                  title: Text(category.name),
                                                   onTap: () async {
                                                     await ProductsDb.update(
                                                         Product(
                                                             name: expense.name,
-                                                            category: e.id));
+                                                            category:
+                                                                category));
 
                                                     setState(() {
                                                       _expenses
@@ -105,7 +106,7 @@ class ReceiptPageState extends State<ReceiptPage> {
                                                                   element
                                                                       .name ==
                                                                   expense.name)
-                                                          .category = e;
+                                                          .category = category;
                                                     });
 
                                                     if (mounted) {

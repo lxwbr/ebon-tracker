@@ -1,11 +1,12 @@
 import 'package:ebon_tracker/application/database_service.dart';
+import 'package:ebon_tracker/application/export.dart';
 import 'package:ebon_tracker/data/category.dart';
 import 'package:ebon_tracker/redux/categories/categories_actions.dart';
 import 'package:ebon_tracker/redux/store.dart';
 import 'package:ebon_tracker/redux/user/user_actions.dart';
 import 'package:ebon_tracker/widgets/categories.dart';
 import 'package:ebon_tracker/widgets/expenses.dart';
-import 'package:ebon_tracker/widgets/export.dart';
+import 'package:ebon_tracker/widgets/expenses_export.dart';
 import 'package:ebon_tracker/widgets/receipts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
@@ -100,12 +101,26 @@ class _AppState extends State<App> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.import_export),
-                    title: const Text('Export'),
+                    title: const Text('Export expenses'),
                     onTap: () async {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const ExportPage()));
+                              builder: (_) => const ExportExpensesPage()));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.import_export),
+                    title: const Text('Export categories'),
+                    onTap: () async {
+                      await exportCategories(state.categoriesState.categories);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.import_export),
+                    title: const Text('Export products'),
+                    onTap: () async {
+                      await exportProducts();
                     },
                   ),
                   ListTile(

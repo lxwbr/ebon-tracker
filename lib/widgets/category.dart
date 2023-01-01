@@ -77,7 +77,7 @@ class CategoryState extends State<CategoryPage> {
               ),
               DropdownButtonFormField<Category>(
                 value: _parent,
-                decoration: InputDecoration(label: Text("Parent")),
+                decoration: const InputDecoration(label: Text("Parent")),
                 items: widget.categories
                     .map((Category category) => DropdownMenuItem(
                           value: category,
