@@ -300,6 +300,13 @@ extension CategoriesDb on DatabaseService {
     db.insert(_tableName, {"name": name, "parentId": parent});
   }
 
+  static Future<void> update(Category category) async {
+    final db = await DatabaseService._databaseService.database;
+    db.update(
+        _tableName, {"name": category.name, "parentId": category.parentId},
+        where: "id = ?", whereArgs: [category.id]);
+  }
+
   static Future<void> purge() async {
     return DatabaseService._purge(_tableName);
   }

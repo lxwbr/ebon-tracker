@@ -18,24 +18,27 @@ class CategoriesPage extends StatelessWidget {
           return Scaffold(
             body: Column(
                 children: state.categories
-                    .map((e) => ListTile(
-                          title: Text(e.name),
-                          onTap: () async {},
+                    .map((category) => ListTile(
+                          title: Text(category.name),
+                          onTap: () => _pushCategoryPage(
+                              context, state.categories, category),
                         ))
                     .toList()),
             floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => CategoryPage(
-                              categories: state.categories,
-                            )));
-              },
+              onPressed: () => _pushCategoryPage(context, state.categories),
               backgroundColor: Colors.green,
               child: const Icon(Icons.add),
             ),
           );
         });
+  }
+
+  void _pushCategoryPage(BuildContext context, List<Category> categories,
+      [Category? selected]) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) =>
+                CategoryPage(categories: categories, selected: selected)));
   }
 }

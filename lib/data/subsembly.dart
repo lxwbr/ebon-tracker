@@ -18,7 +18,7 @@ class Subsembly {
   final String? cdtrId;
   final String? rmtInf;
   final String? purpCd;
-  final String bookgTxt;
+  final String? bookgTxt;
   final String? primaNotaNo;
   final String? bankRef;
   final String? bkTxCd;
@@ -60,7 +60,7 @@ class Subsembly {
       this.cdtrId,
       this.rmtInf,
       this.purpCd,
-      required this.bookgTxt,
+      this.bookgTxt,
       this.primaNotaNo,
       this.bankRef,
       this.bkTxCd,
@@ -145,7 +145,7 @@ class Subsembly {
         cdtrId?.toString() ?? "",
         rmtInf?.toString() ?? "",
         purpCd?.toString() ?? "",
-        bookgTxt.toString(),
+        bookgTxt?.toString() ?? "",
         primaNotaNo?.toString() ?? "",
         bankRef?.toString() ?? "",
         bkTxCd?.toString() ?? "",

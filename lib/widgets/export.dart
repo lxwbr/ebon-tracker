@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ebon_tracker/application/database_service.dart';
+import 'package:ebon_tracker/application/export.dart';
 import 'package:ebon_tracker/data/expense.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,16 +19,11 @@ class ExportPage extends StatefulWidget {
   }
 }
 
-String _twoDigits(int n) {
-  if (n >= 10) return "${n}";
-  return "0${n}";
-}
-
 class ExportState extends State<ExportPage> {
   final _formKey = GlobalKey<FormState>();
 
-  TextEditingController _fromCtl = TextEditingController();
-  TextEditingController _toCtl = TextEditingController();
+  final TextEditingController _fromCtl = TextEditingController();
+  final TextEditingController _toCtl = TextEditingController();
 
   String? _from;
   String? _to;
@@ -50,64 +46,11 @@ class ExportState extends State<ExportPage> {
                   form.save();
 
                   if (_from != null && _to != null) {
-                    Iterable<Expense> expenses = await ExpensesDb.between(
+                    await export(
                         DateTime.parse(_from!).toUtc(),
                         DateTime.parse(_to!)
                             .toUtc()
                             .add(const Duration(days: 1)));
-
-                    print(expenses);
-
-                    Expense first = expenses.first;
-                    Subsembly test = Subsembly(
-                        id: first.messageId,
-                        ownrAcctCcy: "EUR",
-                        bookgDt:
-                            "${_twoDigits(first.timestamp!.day)}.${_twoDigits(first.timestamp!.month)}.${first.timestamp!.year.toString().substring(2)}",
-                        amt: 22.8,
-                        amtCcy: "EUR",
-                        cdtDbtInd: "DBIT",
-                        bookgTxt: "Test",
-                        bookgSts: "BOOK",
-                        btchBookg: "true",
-                        rmtdAcctCtry: "DE",
-                        readStatus: "false",
-                        flag: "None");
-
-                    Iterable<Subsembly> converted = expenses.map((expense) {
-                      String cdtDbtInd = expense.total() > .0 ? "DBIT" : "CRDT";
-                      String bookgTxt = expense.name;
-                      return Subsembly(
-                          ownrAcctCcy: "EUR",
-                          bookgDt:
-                              "${_twoDigits(expense.timestamp!.day)}.${_twoDigits(expense.timestamp!.month)}.${expense.timestamp!.year.toString().substring(2)}",
-                          amt: expense.total(),
-                          amtCcy: "EUR",
-                          cdtDbtInd: cdtDbtInd,
-                          bookgTxt: bookgTxt,
-                          bookgSts: "BOOK",
-                          rmtdAcctCtry: "DE",
-                          readStatus: "false",
-                          btchBookg: "false",
-                          btchId: expense.messageId,
-                          category: expense.category != null
-                              ? "Haushalt:Lebensmittel:Deutschland:Rewe:${expense.category!.name}"
-                              : "",
-                          flag: "None");
-                    });
-
-                    var rows = converted.map((e) => e.toCsv);
-
-                    print(rows.length);
-
-                    String csv = const ListToCsvConverter()
-                        .convert([Subsembly.headers, ...rows, test.toCsv]);
-                    final directory = await getTemporaryDirectory();
-                    final file = File('${directory.path}/subsembly.csv');
-                    file.writeAsStringSync(csv);
-                    XFile xFile = XFile(file.path);
-                    await Share.shareXFiles([xFile]);
-                    file.deleteSync();
                   }
 
                   if (mounted) {
