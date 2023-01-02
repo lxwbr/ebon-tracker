@@ -25,7 +25,20 @@ Future<void> _store(String name, List<List<String>> rows) async {
   file.deleteSync();
 }
 
-Future<void> exportExpenses(DateTime from, DateTime to) async {
+String _categoryString(
+    Category category, String subCategories, List<Category> categories) {
+  String name = ":${category.name}$subCategories";
+  if (category.parentId != null) {
+    Category parent =
+        categories.firstWhere((element) => element.id == category.parentId);
+    return _categoryString(parent, name, categories);
+  } else {
+    return name;
+  }
+}
+
+Future<void> exportExpenses(
+    DateTime from, DateTime to, List<Category> categories) async {
   Iterable<Expense> expenses = await ExpensesDb.between(from, to);
   Iterable<Subsembly> converted = expenses.map((expense) {
     String cdtDbtInd = expense.total() > .0 ? "DBIT" : "CRDT";
@@ -41,7 +54,7 @@ Future<void> exportExpenses(DateTime from, DateTime to) async {
         readStatus: "false",
         rmtdUltmtNm: expense.name,
         category: expense.category != null
-            ? "Haushalt:Lebensmittel:Deutschland:Rewe:${expense.category!.name}"
+            ? "Haushalt:Lebensmittel:Deutschland:Rewe${_categoryString(expense.category!, "", categories)}"
             : "",
         flag: "None");
   });

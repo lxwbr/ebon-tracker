@@ -106,7 +106,9 @@ class _AppState extends State<App> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const ExportExpensesPage()));
+                              builder: (_) => ExportExpensesPage(
+                                  categories:
+                                      state.categoriesState.categories)));
                     },
                   ),
                   ListTile(

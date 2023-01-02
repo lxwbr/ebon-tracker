@@ -1,8 +1,11 @@
 import 'package:ebon_tracker/application/export.dart';
 import 'package:flutter/material.dart';
 
+import '../data/category.dart';
+
 class ExportExpensesPage extends StatefulWidget {
-  const ExportExpensesPage({super.key});
+  const ExportExpensesPage({super.key, required this.categories});
+  final List<Category> categories;
 
   @override
   ExportState createState() {
@@ -41,7 +44,8 @@ class ExportState extends State<ExportExpensesPage> {
                         DateTime.parse(_from!).toUtc(),
                         DateTime.parse(_to!)
                             .toUtc()
-                            .add(const Duration(days: 1)));
+                            .add(const Duration(days: 1)),
+                        widget.categories);
                   }
 
                   if (mounted) {
